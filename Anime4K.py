@@ -7,7 +7,7 @@ from extract_subs import extract_subs
 from mux import mux
 from shader import shader
 from splitter import split_by_seconds, get_video_length
-from utils import is_tool, credz, str2bool
+from utils import __current_version__, is_tool, credz, str2bool
 
 credz()
 
@@ -23,7 +23,10 @@ if not is_tool("mpv"):
     sys.exit(-3)
 
 parser = argparse.ArgumentParser(
-    description='Upshader Animes to 4K automagically.')
+    description='Upscales animes to 4K automagically using Anime4K shaders.')
+parser.add_argument("-v", "--version", required=False,
+                    action='store_true',
+                    help="Print the current version of Anime4K-Encoder")
 parser.add_argument("-m", "--mode", required=False,
                     default="shader",
                     help="Mode: choose from audio, subs, shader, or mux, split")
@@ -37,14 +40,22 @@ parser.add_argument("-sd", "--shader_dir", required=False, type=str,
 parser.add_argument("-bit", "--bit", required=False, type=str2bool, nargs='?',
                     const=True, default=False,
                     help="Set this flag if the source file is 10bit when using shader")
-parser.add_argument("-i", "--file", required=True, help="The input file")
+parser.add_argument("-i", "--file", required=False, help="The input file")
 parser.add_argument("-o", "--output", required=False,
                     help="Output filename/directory")
 parser.add_argument("-sz", "--split_length", required=False, type=int,
                     default=10, help="Seconds to split the video in")
 
 args = vars(parser.parse_args())
+if args['version']:
+    print("Anime4K-Encoder v" + __current_version__)
+    sys.exit(1)
+
 fn = args['file']
+if fn is None:
+    parser.print_help()
+    print("error: the following arguments are required: -i/--file")
+    sys.exit(-2)
 if not os.path.isdir(fn):
     if not os.path.isfile(fn):
         print("{0} does not exist".format(fn))

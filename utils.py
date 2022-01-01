@@ -1,5 +1,7 @@
-from shutil import which
 import os
+from shutil import which
+
+__current_version__ = '1.0.0-SNAPSHOT'
 
 
 def credz():
@@ -9,7 +11,7 @@ def credz():
     print(" / _ \| ' \| | '  \/ -_)_  _| ' < ")
     print("/_/ \_\_||_|_|_|_|_\___| |_||_|\_\\")
     print("___________________________________")
-    print("   Upscale your Favorite Anime!    ")
+    print("   Upscale your favorite anime!    ")
     print("       Made by ThoughtfulDev       ")
     print("    Updated by Secksdendfordff     ")
     print("          and KingFaris10          ")
