@@ -17,7 +17,7 @@ changes. The differences between Anime4K-Encode-4.0.1 and this repository are:
 
 - Cleaned up code
 - Re-added NVENC support
-- Ability to toggle hardsubs via a command line argument
+- Ability to toggle hardsubs via `--no_subtitles`
 - Use "shader" as the default mode
 - Use 3840x2160 as the default output WxH
 - Use "./shaders" as the default shaders path
@@ -49,7 +49,7 @@ folder, for example called *shaders*
 ## Burning in subs
 
 If there's a default sub track, it will be burned in automatically. If you want
-to add softsubs, you will have to run the script with `--no-subtitles` and add
+to add softsubs, you will have to run the script with `--no_subtitles` and add
 them later.
 
 This can also fix some audio problems that you may encounter during encoding,
