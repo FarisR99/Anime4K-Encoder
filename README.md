@@ -121,21 +121,23 @@ every user:
 - The encoding preset doesn't noticeably affect the encoding speed (only tested
   from fastest to medium)
 
-Obviously the best way to use the shaders is in real time, its intended
-purpose. The purpose of this program is for those that can't run the HQ version
-of the shader (the one this one uses) in real time, or to use them for later (
-Phone, streaming server, etc)
+The best way to use the shaders is in real time, its intended purpose. The
+purpose of this program is for those that can't run the HQ version of the
+shader (the one this one uses) in real time, or to use them for later (
+Phone, streaming server, etc). This encoding process can take hours or even
+days for episodes and movies.
 
 ## Features
 
-* Encode Videos with Anime4K shaders easily
+* Encode videos with Anime4K shaders easily
 * Encode using x264 or x265
-* Extract Audio and subtitles automatically
+* Encode using NVENC
+* Extract audio and subtitles automatically
 * Predefined profiles for Anime4K and ffmpeg
 
 ## TODO
 
-- Batch Encoding.
+- Batch encoding.
 - Adding extra shaders that are not included in the [Modes] by default (Darken,
   Thin, Etc)
 
