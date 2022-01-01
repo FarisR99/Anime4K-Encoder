@@ -1,6 +1,7 @@
 from shutil import which
 import os
 
+
 def credz():
     print("___________________________________")
     print("   _        _           _ _  _  __")
@@ -8,13 +9,16 @@ def credz():
     print(" / _ \| ' \| | '  \/ -_)_  _| ' < ")
     print("/_/ \_\_||_|_|_|_|_\___| |_||_|\_\\")
     print("___________________________________")
-    print("    Upscale your Favorite Anime!   ")
+    print("   Upscale your Favorite Anime!    ")
     print("       Made by ThoughtfulDev       ")
+    print("    Updated by Secksdendfordff     ")
+    print("          and KingFaris10          ")
     print("\n")
-                                   
+
 
 def is_tool(name):
     return which(name) is not None
+
 
 def langToShort(lang):
     if lang == 'English':
@@ -27,6 +31,7 @@ def langToShort(lang):
         return "kor"
     else:
         return "und"
+
 
 def shortToLong(lang):
     if lang == "eng":
@@ -42,6 +47,7 @@ def shortToLong(lang):
     else:
         return "Unknown"
 
+
 language_mapping = {
     "eng": "English",
     "ja": "Japanese",
@@ -52,12 +58,14 @@ language_mapping = {
     "kor": "Korean",
 }
 
+
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+
 def str2bool(v):
     if isinstance(v, bool):
-       return v
+        return v
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
     elif v.lower() in ('no', 'false', 'f', 'n', '0'):

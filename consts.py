@@ -8,5 +8,3 @@ Restore_CNN_Soft_VL = "Anime4K_Restore_CNN_Soft_VL.glsl"
 Upscale_Denoise_CNN_x2_VL = "Anime4K_Upscale_CNN_x2_VL.glsl"
 Restore_CNN_M = "Anime4K_Restore_CNN_M.glsl"
 Restore_CNN_Soft_M = "Anime4K_Restore_CNN_Soft_M.glsl"
-
-

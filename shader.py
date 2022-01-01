@@ -1,20 +1,25 @@
-import subprocess, os, sys,glob
-from pymediainfo import MediaInfo
-from pymkv import MKVFile
-from utils import clear
-from simple_term_menu import TerminalMenu
-from consts import *
+import glob
+import os
+import subprocess
+import sys
 
-#MODE SELECTION
+from pymediainfo import MediaInfo
+from simple_term_menu import TerminalMenu
+
+from consts import *
+from utils import clear
+
+
+# MODE SELECTION
 def FHDMenu(shader_dir):
     mode_menu = TerminalMenu(
         ["Mode A (High Quality, Medium Artifacts)",
-        "Mode B (Medium Quality, Minor Artifacts)",
-        "Mode C (Unnoticeable Quality Improvements)",
-        "Mode A+A (Higher Quality, Might overshapen the image)",
-        "Mode B+B (RECOMMENDED. High Quality, Minor Artifacts)",
-        "Mode C+A (Low Quality, Minor Artifacts)"
-        ],
+         "Mode B (Medium Quality, Minor Artifacts)",
+         "Mode C (Unnoticeable Quality Improvements)",
+         "Mode A+A (Higher Quality, Might overshapen the image)",
+         "Mode B+B (RECOMMENDED. High Quality, Minor Artifacts)",
+         "Mode C+A (Low Quality, Minor Artifacts)"
+         ],
         title="Please refer to the Anime4k Wiki for more info\nand try the shaders on mpv beforehand to know whats best for you\nChoose Shader Preset:"
     )
     mode_choice = mode_menu.show()
@@ -23,7 +28,7 @@ def FHDMenu(shader_dir):
         print("Canceling")
         sys.exit(-1)
 
-    #Apply Shaders
+    # Apply Shaders
     if mode_choice == 0:
         s = os.path.join(shader_dir, Clamp_Highlights)
         s = s + ":"
@@ -105,23 +110,25 @@ def FHDMenu(shader_dir):
         s = s + os.path.join(shader_dir, Upscale_CNN_x2_M)
         return s
 
-#MACROS OR SOMETHING
+
+# MACROS OR SOMETHING
 
 def remove_audio_and_subs(fn):
     subprocess.call([
         "mkvmerge",
         "-o",
         "temp.mkv",
-        #"--no-subtitles",
-        #"--no-audio",
+        # "--no-subtitles",
+        # "--no-audio",
         fn
     ])
 
-#IDK WHAT THIS DOES
+
+# IDK WHAT THIS DOES
 def shader(fn, width, height, shader, ten_bit, outname):
-    clear()  
+    clear()
     files = []
-    if os.path.isdir(fn):   
+    if os.path.isdir(fn):
         for file in glob.glob(os.path.join(fn, "*.mkv")):
             files.append(os.path.join(file))
     else:
@@ -129,11 +136,11 @@ def shader(fn, width, height, shader, ten_bit, outname):
         fn = "temp.mkv"
         clear()
 
-#SELECT ENCODER 264/265
+    # SELECT ENCODER 264/265
     cg_menu = TerminalMenu(
         ["X264 (Medium Quality/Size ratio, Fast)",
-        "X265 (High Quality/Size ratio, Slow)"
-        ],
+         "X265 (High Quality/Size ratio, Slow)"
+         ],
         title="Choose your video codec."
     )
     cg_choice = cg_menu.show()
@@ -145,21 +152,22 @@ def shader(fn, width, height, shader, ten_bit, outname):
         print("Cancel")
         sys.exit(-2)
 
-#REMOVE TEMP OR SOMETHING
+    # REMOVE TEMP OR SOMETHING
     if os.path.isdir(fn):
         os.remove("temp.mkv")
     else:
         os.remove(fn)
-    
-#Video settings 264
+
+
+# Video settings 264
 
 def avc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
     clear()
 
-#ALWAYS 10 BIT BC FOR SOME REASON IT DIDNT DETECTED 10 BIT ON THE ORIGINAL
+    # ALWAYS 10 BIT BC FOR SOME REASON IT DIDNT DETECTED 10 BIT ON THE ORIGINAL
     format = "yuv420p10le"
 
-#detect width and height of video.
+    # detect width and height of video.
     if len(files) == 0:
         _m = MediaInfo.parse(fn)
     else:
@@ -171,24 +179,26 @@ def avc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
             str_shaders = FHDMenu(shader)
     clear()
 
-#Select Codec Presets
+    # Select Codec Presets
     encoder_preset = [
         "veryfast", "fast", "medium", "slow", "veryslow"
     ]
-    codec_preset = encoder_preset[TerminalMenu(encoder_preset, title="Choose your encoder preset:").show()]
+    codec_preset = encoder_preset[TerminalMenu(encoder_preset,
+                                               title="Choose your encoder preset:").show()]
 
-    crf = input("Insert compression factor (CRF) 0-51\n0 = Lossless | 23 = Default | 51 = Highest compression\n")
+    crf = input(
+        "Insert compression factor (CRF) 0-51\n0 = Lossless | 23 = Default | 51 = Highest compression\n")
 
-#PRINT INFO
+    # PRINT INFO
     print("File: " + fn)
     print("Using the following shaders:")
     print(str_shaders)
-    print("Encoding with preset: " +  codec_preset + " crf=" + crf)
+    print("Encoding with preset: " + codec_preset + " crf=" + crf)
     import time
     time.sleep(3)
-    #clear()
+    # clear()
 
-#ENCODE
+    # ENCODE
     if len(files) == 0:
         subprocess.call([
             "mpv",
@@ -205,7 +215,8 @@ def avc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
             "--oac=libopus",
             "--oacopts=b=192k",
             "--ovc=libx264",
-            '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(crf) + ',aq-mode=3,psy-rd=1.0,bf=6',
+            '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(
+                crf) + ',aq-mode=3,psy-rd=1.0,bf=6',
             '--vf-pre=sub',
             '--o=' + outname
         ])
@@ -231,24 +242,23 @@ def avc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
                 "--oac=libopus",
                 "--oacopts=b=192k",
                 "--ovc=libx264",
-                '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(crf) + ',aq-mode=3,psy-rd=1.0,bf=8',
+                '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(
+                    crf) + ',aq-mode=3,psy-rd=1.0,bf=8',
                 '--vf-pre=sub',
                 '--o=' + os.path.join(outname, name)
             ])
             i = i + 1
 
 
-
-#Video settings 265
+# Video settings 265
 
 def hevc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
     clear()
-#ALWAYS 10BIT BEACUSE IT DOESNT DETECT 10 BIT
+    # ALWAYS 10BIT BEACUSE IT DOESNT DETECT 10 BIT
 
     format = "yuv420p10le"
 
-
-#detect width and height of video.
+    # detect width and height of video.
     if len(files) == 0:
         _m = MediaInfo.parse(fn)
     else:
@@ -260,23 +270,25 @@ def hevc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
             str_shaders = FHDMenu(shader)
     clear()
 
-#Select Codec Presets
+    # Select Codec Presets
     encoder_preset = [
         "veryfast", "fast", "medium", "slow", "veryslow"
     ]
-    codec_preset = encoder_preset[TerminalMenu(encoder_preset, title="Choose your encoder preset:").show()]
-    crf = input("Insert compression factor (CRF) 0-51\n0 = Lossless | 28 = Default | 51 = Highest compression\n")
+    codec_preset = encoder_preset[TerminalMenu(encoder_preset,
+                                               title="Choose your encoder preset:").show()]
+    crf = input(
+        "Insert compression factor (CRF) 0-51\n0 = Lossless | 28 = Default | 51 = Highest compression\n")
 
-#PRINT INFO
+    # PRINT INFO
     print("File: " + fn)
     print("Using the following shaders:")
     print(str_shaders)
-    print("Encoding with preset: " +  codec_preset + " crf=" + crf)
+    print("Encoding with preset: " + codec_preset + " crf=" + crf)
     import time
     time.sleep(3)
-    #clear()
+    # clear()
 
-#ENCODE
+    # ENCODE
     if len(files) == 0:
         subprocess.call([
             "mpv",
@@ -293,7 +305,8 @@ def hevc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
             "--oac=libopus",
             "--oacopts=b=192k",
             "--ovc=libx265",
-            '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(crf) + ',aq-mode=3,psy-rd=1.0,bf=6',
+            '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(
+                crf) + ',aq-mode=3,psy-rd=1.0,bf=6',
             '--vf-pre=sub',
             '--o=' + outname
         ])
@@ -319,10 +332,9 @@ def hevc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
                 "--oac=libopus",
                 "--oacopts=b=192k",
                 "--ovc=libx265",
-                '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(crf) + ',aq-mode=3,psy-rd=1.0,bf=8',
+                '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(
+                    crf) + ',aq-mode=3,psy-rd=1.0,bf=8',
                 '--vf-pre=sub',
                 '--o=' + os.path.join(outname, name)
             ])
             i = i + 1
-    
-    

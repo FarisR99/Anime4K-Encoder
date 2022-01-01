@@ -1,6 +1,6 @@
+import subprocess
+
 from pymkv import MKVFile
-import subprocess, sys, os
-from utils import is_tool
 
 
 def genExt(codec):
@@ -11,6 +11,7 @@ def genExt(codec):
     elif "SRT" in codec or "SubRip" in codec:
         return "srt"
 
+
 def extract_subs(fn):
     mkv = MKVFile(fn)
 
@@ -20,7 +21,6 @@ def extract_subs(fn):
             ext = genExt(track._track_codec)
             lang = track._language
             id = str(track._track_id)
-            
-            subprocess.call(['mkvextract', 'tracks', fn, id + ':' + lang + '_' + id + '.' + ext])
-        
-        
+
+            subprocess.call(['mkvextract', 'tracks', fn,
+                             id + ':' + lang + '_' + id + '.' + ext])

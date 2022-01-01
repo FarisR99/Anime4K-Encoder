@@ -1,7 +1,9 @@
-import glob, os, sys, subprocess
-from pymkv import MKVFile, MKVTrack
-from utils import langToShort, shortToLong
+import glob
+import os
 
+from pymkv import MKVFile, MKVTrack
+
+from utils import langToShort, shortToLong
 
 
 def addAudio(source, ext):
@@ -12,6 +14,7 @@ def addAudio(source, ext):
         t.language = langToShort(lang)
         print("Adding AudioTrack")
         source.add_track(t)
+
 
 def addSubs(source, ext):
     for file in glob.glob("*." + ext):
@@ -26,10 +29,12 @@ def addSubs(source, ext):
         print("Adding new SUB")
         source.add_track(t)
 
+
 def delete_by_extension(ext):
     for file in glob.glob("*." + ext):
         os.remove(file)
-        
+
+
 def mux(fn, out):
     mkv = MKVFile(fn)
 
@@ -48,7 +53,7 @@ def mux(fn, out):
 
     mkv.mux(out)
 
-    #clean up
+    # clean up
     print("Cleaning...")
 
     delete_by_extension("AAC")

@@ -1,10 +1,9 @@
 import csv
-import subprocess
-import math
 import json
+import math
 import os
 import shlex
-from optparse import OptionParser
+import subprocess
 
 
 def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
@@ -53,33 +52,43 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
                     filebase = ".".join(filebase.split(".")[:-1])
 
                 split_args += ["-ss", str(split_start), "-t",
-                    str(split_length), filebase + "." + fileext]
-                print("########################################################")
-                print("About to run: "+" ".join(split_cmd+split_args))
-                print("########################################################")
-                subprocess.check_output(split_cmd+split_args)
+                               str(split_length), filebase + "." + fileext]
+                print(
+                    "########################################################")
+                print("About to run: " + " ".join(split_cmd + split_args))
+                print(
+                    "########################################################")
+                subprocess.check_output(split_cmd + split_args)
             except KeyError as e:
                 print("############# Incorrect format ##############")
                 if manifest_type == "json":
                     print("The format of each json array should be:")
-                    print("{start_time: <int>, length: <int>, rename_to: <string>}")
+                    print(
+                        "{start_time: <int>, length: <int>, rename_to: <string>}")
                 elif manifest_type == "csv":
-                    print("start_time,length,rename_to should be the first line ")
+                    print(
+                        "start_time,length,rename_to should be the first line ")
                     print("in the csv file.")
                 print("#############################################")
                 print(e)
                 raise SystemExit
 
-def get_video_length(filename):
 
-    output = subprocess.check_output(("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", filename)).strip()
+def get_video_length(filename):
+    output = subprocess.check_output((
+        "ffprobe", "-v", "error", "-show_entries",
+        "format=duration", "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        filename)).strip()
     video_length = int(float(output))
-    print("Video length in seconds: "+str(video_length))
+    print("Video length in seconds: " + str(video_length))
 
     return video_length
 
+
 def ceildiv(a, b):
     return int(math.ceil(a / float(b)))
+
 
 def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
                      extra="", video_length=None, split_dir="./", **kwargs):
@@ -90,11 +99,12 @@ def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
     if not video_length:
         video_length = get_video_length(filename)
     split_count = ceildiv(video_length, split_length)
-    if(split_count == 1):
+    if (split_count == 1):
         print("Video length is less then the target split length.")
         raise SystemExit
 
-    split_cmd = ["ffmpeg", "-i", filename, "-vcodec", vcodec, "-acodec", acodec] + shlex.split(extra)
+    split_cmd = ["ffmpeg", "-i", filename, "-vcodec", vcodec, "-acodec",
+                 acodec] + shlex.split(extra)
     try:
         filebase = ".".join(filename.split(".")[:-1])
         fileext = filename.split(".")[-1]
@@ -108,7 +118,7 @@ def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
             split_start = split_length * n
         filebase = os.path.join(split_dir, "split")
         split_args += ["-ss", str(split_start), "-t", str(split_length),
-                       filebase + "-" + str(n+1) + "-of-" + \
-                        str(split_count) + "." + fileext]
-        print("About to run: "+" ".join(split_cmd+split_args))
-        subprocess.check_output(split_cmd+split_args)
+                       filebase + "-" + str(n + 1) + "-of-" + \
+                       str(split_count) + "." + fileext]
+        print("About to run: " + " ".join(split_cmd + split_args))
+        subprocess.check_output(split_cmd + split_args)
