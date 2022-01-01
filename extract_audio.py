@@ -9,9 +9,17 @@ from simple_term_menu import TerminalMenu
 from utils import language_mapping
 
 
-def extract_audio(fn):
+def extract_audio(fn: str):
+    """
+    Extract audio from a media file.
+
+    Args:
+        fn: input media file path
+    """
+
     mkv = MKVFile(fn)
 
+    # Extract tracks from input media
     tracks = mkv.get_track()
     for track in tracks:
         if track.track_type == 'audio':
@@ -19,20 +27,24 @@ def extract_audio(fn):
             lang = language_mapping[track._language]
             id = str(track._track_id)
             subprocess.call(
-                ['mkvextract', 'tracks', fn, id + ':' + lang + '.' + ext])
+                ['mkvextract', 'tracks', fn, id + ':' + lang + '.' + ext]
+            )
 
     flacs = []
     for file in glob.glob("*.FLAC"):
         flacs.append(file)
     if len(flacs) > 0:
-        convert_menu = TerminalMenu(["Yes", "No"],
-                                    title="Do you want to convert every FLAC to Opus?")
+        convert_menu = TerminalMenu(
+            ["Yes", "No"],
+            title="Do you want to convert every FLAC to Opus?"
+        )
         convert_choice = convert_menu.show()
         if convert_choice == 0:
             for f in flacs:
-                br_menu = TerminalMenu(["192K", "256K", "320K"],
-                                       title="Whats the format of the file? => {0}".format(
-                                           f))
+                br_menu = TerminalMenu(
+                    ["192K", "256K", "320K"],
+                    title="What's the format of the file? => {0}".format(f)
+                )
                 br_choice = br_menu.show()
                 if br_choice == 0:
                     br = "192K"

@@ -7,22 +7,30 @@ from simple_term_menu import TerminalMenu
 from utils import is_tool, clear
 
 
-def encode_to_hevc(fn, out):
+def encode_to_hevc(fn: str, out: str):
+    """
+    Encode a media file to HEVC
+
+    Args:
+        fn: media file path
+        out: output path
+    """
+
     param_line = "crf=18.0:limit-sao=1:bframes=8:aq-mode=3:psy-rd=1.0"
 
     detail_menu = TerminalMenu([
-        "(Recommended if you dont know) One Setting to rule them all",
-        "(e.g Your Name) Flat, slow anime (slice of life, everything is well lit)",
-        "(e.g Kimetsu no Yaiba) Some dark scene, some battle scene (shonen, historical, etc.)",
-        "(Rarely used) [TV Series] Movie-tier dark scene, complex grain/detail",
-        "(Rarely used) [Movie] Movie-tier dark scene, complex grain/detail",
+        "One setting to rule them all (Recommended if you don't know)",
+        "Flat, slow anime (slice of life, everything is well lit, e.g. Your Name)",
+        "Some dark scenes, some battle scenes (shonen, historical, etc., e.g. Kimetsu no Yaiba)",
+        "[TV Series] Movie-tier dark scene, complex grain/detail (Rarely used)",
+        "[Movie] Movie-tier dark scene, complex grain/detail (Rarely used)",
     ], title="Choose the encode options")
 
     choice = detail_menu.show()
     # Flat, slow anime (slice of life, everything is well lit)
     if choice == 1:
         param_line = "crf=19.0:bframes=8:aq-mode=3:psy-rd=1:aq-strength=0.8:deblock=1,1"
-    # Some dark scene, some battle scene (shonen, historical, etc.)
+    # Some dark scenes, some battle scenes (shonen, historical, etc.)
     elif choice == 2:
         param_line = "crf=18.0:bframes=8:aq-mode=3:psy-rd=1.5:psy-rdoq=2"
     # [TV Series] Movie-tier dark scene, complex grain/detail

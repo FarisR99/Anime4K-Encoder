@@ -12,7 +12,14 @@ def genExt(codec):
         return "srt"
 
 
-def extract_subs(fn):
+def extract_subs(fn: str):
+    """
+    Extract subtitles from a media file.
+
+    Args:
+        fn: input media file path
+    """
+
     mkv = MKVFile(fn)
 
     tracks = mkv.get_track()

@@ -8,7 +8,8 @@ import subprocess
 
 def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
                       extra="", **kwargs):
-    """ Split video into segments based on the given manifest file.
+    """
+    Split video into segments based on the given manifest file.
 
     Arguments:
         filename (str)      - Location of the video.
@@ -19,6 +20,7 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
                             output.
         extra (str)         - Extra options for ffmpeg.
     """
+
     if not os.path.exists(manifest):
         print("File does not exist: %s".format(manifest))
         raise SystemExit
@@ -74,7 +76,14 @@ def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
                 raise SystemExit
 
 
-def get_video_length(filename):
+def get_video_length(filename: str) -> int:
+    """
+    Args:
+        filename: input video file path
+
+    Returns: video length
+    """
+
     output = subprocess.check_output((
         "ffprobe", "-v", "error", "-show_entries",
         "format=duration", "-of",
@@ -86,12 +95,14 @@ def get_video_length(filename):
     return video_length
 
 
-def ceildiv(a, b):
+def ceildiv(a, b) -> int:
     return int(math.ceil(a / float(b)))
 
 
-def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
-                     extra="", video_length=None, split_dir="./", **kwargs):
+def split_by_seconds(filename: str, split_length: int, vcodec: str = "copy",
+                     acodec: str = "copy", extra: str = "",
+                     video_length: int = None, split_dir: str = "./",
+                     **kwargs):
     if split_length and split_length <= 0:
         print("Split length can't be 0")
         raise SystemExit
@@ -118,7 +129,7 @@ def split_by_seconds(filename, split_length, vcodec="copy", acodec="copy",
             split_start = split_length * n
         filebase = os.path.join(split_dir, "split")
         split_args += ["-ss", str(split_start), "-t", str(split_length),
-                       filebase + "-" + str(n + 1) + "-of-" + \
-                       str(split_count) + "." + fileext]
+                       filebase + "-" + str(n + 1) + "-of-" + str(
+                           split_count) + "." + fileext]
         print("About to run: " + " ".join(split_cmd + split_args))
         subprocess.check_output(split_cmd + split_args)

@@ -5,6 +5,9 @@ __current_version__ = '1.0.0-SNAPSHOT'
 
 
 def credz():
+    """
+    Print credits
+    """
     print("___________________________________")
     print("   _        _           _ _  _  __")
     print("  /_\  _ _ (_)_ __  ___| | || |/ /")
@@ -18,11 +21,14 @@ def credz():
     print("\n")
 
 
-def is_tool(name):
+def is_tool(name: str) -> bool:
+    """
+    Check if the specified name is installed
+    """
     return which(name) is not None
 
 
-def langToShort(lang):
+def lang_long_to_short(lang: str) -> str:
     if lang == 'English':
         return "eng"
     elif lang == 'Japanese':
@@ -35,7 +41,7 @@ def langToShort(lang):
         return "und"
 
 
-def shortToLong(lang):
+def lang_short_to_long(lang: str) -> str:
     if lang == "eng":
         return "English"
     elif lang == "jpn" or lang == "jap" or lang == "ja":
@@ -65,7 +71,7 @@ def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def str2bool(v):
+def str2bool(v) -> bool:
     if isinstance(v, bool):
         return v
     if v.lower() in ('yes', 'true', 't', 'y', '1'):

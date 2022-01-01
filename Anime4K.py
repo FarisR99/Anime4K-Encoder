@@ -7,10 +7,11 @@ from extract_subs import extract_subs
 from mux import mux
 from shader import shader
 from splitter import split_by_seconds, get_video_length
-from utils import __current_version__, is_tool, credz, str2bool
+from utils import __current_version__, is_tool, credz
 
 credz()
 
+# Check for required tools
 if not is_tool("mkvextract"):
     print("mkvnixtool not installed. Please install it")
     sys.exit(-3)
@@ -22,6 +23,7 @@ if not is_tool("mpv"):
     print("mpv is not installed. Please install a new version")
     sys.exit(-3)
 
+# Parse arguments
 parser = argparse.ArgumentParser(
     description='Upscales animes to 4K automagically using Anime4K shaders.')
 parser.add_argument("-v", "--version", required=False,
@@ -37,8 +39,8 @@ parser.add_argument("-eh", "--height", required=False, type=int,
 parser.add_argument("-sd", "--shader_dir", required=False, type=str,
                     default="./shaders",
                     help="Path to shader folder")
-parser.add_argument("-bit", "--bit", required=False, type=str2bool, nargs='?',
-                    const=True, default=False,
+parser.add_argument("-bit", "--bit", required=False,
+                    action='store_true',
                     help="Set this flag if the source file is 10bit when using shader")
 parser.add_argument("-i", "--file", required=False, help="The input file")
 parser.add_argument("-o", "--output", required=False,
@@ -55,6 +57,7 @@ if args['version']:
     print("Anime4K-Encoder v" + __current_version__)
     sys.exit(1)
 
+# Ensure input path is specified and exists
 fn = args['file']
 if fn is None:
     parser.print_help()
@@ -65,10 +68,7 @@ if not os.path.isdir(fn):
         print("{0} does not exist".format(fn))
         sys.exit(-2)
 
-if args['output'] == None:
-    outname = "out.mkv"
-else:
-    outname = args['output']
+outname = args['output'] or "out.mkv"
 
 mode = args['mode']
 if mode == "audio":

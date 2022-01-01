@@ -3,20 +3,36 @@ import os
 
 from pymkv import MKVFile, MKVTrack
 
-from utils import langToShort, shortToLong
+from utils import lang_long_to_short, lang_short_to_long
 
 
-def addAudio(source, ext):
+def addAudio(source, ext: str):
+    """
+    Add all audio tracks with the specified extension to the source
+
+    Args:
+        source: source file
+        ext: extension of the audio files
+    """
+
     for file in glob.glob("*." + ext):
         t = MKVTrack(file)
         lang = file.split('.')[0]
         t.track_name = lang
-        t.language = langToShort(lang)
-        print("Adding AudioTrack")
+        t.language = lang_long_to_short(lang)
+        print("Adding audio track: " + t.track_name)
         source.add_track(t)
 
 
-def addSubs(source, ext):
+def addSubs(source, ext: str):
+    """
+    Add all subtitles with the specified extension to the source
+
+    Args:
+        source: source file
+        ext: extension of the subtitle files
+    """
+
     for file in glob.glob("*." + ext):
         t = MKVTrack(file)
         lang = file.split('.')[0]
@@ -24,18 +40,33 @@ def addSubs(source, ext):
             lang = lang.split('_')[0]
         else:
             lang = lang
-        t.track_name = shortToLong(lang)
+        t.track_name = lang_short_to_long(lang)
         t.language = lang
-        print("Adding new SUB")
+        print("Adding new subs: " + t.track_name)
         source.add_track(t)
 
 
-def delete_by_extension(ext):
+def delete_by_extension(ext: str):
+    """
+    Delete all files with the specified extension
+
+    Args:
+        ext: File extension
+    """
+
     for file in glob.glob("*." + ext):
         os.remove(file)
 
 
-def mux(fn, out):
+def mux(fn: str, out: str):
+    """
+    Start the muxing process
+
+    Args:
+        fn: input media file path
+        out: output file path
+    """
+
     mkv = MKVFile(fn)
 
     addAudio(mkv, "AAC")
@@ -53,7 +84,7 @@ def mux(fn, out):
 
     mkv.mux(out)
 
-    # clean up
+    # Clean up
     print("Cleaning...")
 
     delete_by_extension("AAC")
@@ -68,4 +99,4 @@ def mux(fn, out):
     delete_by_extension("sup")
     delete_by_extension("srt")
     delete_by_extension("ass")
-    print("KTHXBYE")
+    print("Cleaned!")
