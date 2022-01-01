@@ -24,13 +24,15 @@ if not is_tool("mpv"):
 
 parser = argparse.ArgumentParser(
     description='Upshader Animes to 4K automagically.')
-parser.add_argument("-m", "--mode", required=True,
+parser.add_argument("-m", "--mode", required=False,
+                    default="shader",
                     help="Mode: choose from audio, subs, shader, or mux, split")
 parser.add_argument("-ew", "--width", required=False, type=int,
                     help="desired width when applying shader")
 parser.add_argument("-eh", "--height", required=False, type=int,
                     help="desired height when applying shader")
 parser.add_argument("-sd", "--shader_dir", required=False, type=str,
+                    default="./shaders",
                     help="Path to shader folder")
 parser.add_argument("-bit", "--bit", required=False, type=str2bool, nargs='?',
                     const=True, default=False,

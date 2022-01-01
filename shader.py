@@ -126,6 +126,10 @@ def remove_audio_and_subs(fn):
 
 # IDK WHAT THIS DOES
 def shader(fn, width, height, shader, ten_bit, outname):
+    if not os.path.isdir(shader):
+        print("Shaders directory does not exist at: " + shader)
+        sys.exit(-2)
+
     clear()
     files = []
     if os.path.isdir(fn):
