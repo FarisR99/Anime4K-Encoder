@@ -113,19 +113,22 @@ def FHDMenu(shader_dir):
 
 # MACROS OR SOMETHING
 
-def remove_audio_and_subs(fn):
-    subprocess.call([
+def remove_audio_and_subs(fn, softsubs):
+    args = [
         "mkvmerge",
         "-o",
-        "temp.mkv",
-        # "--no-subtitles",
-        # "--no-audio",
-        fn
-    ])
+        "temp.mkv"
+    ]
+    if softsubs:
+        args.append("--no-subtitles")
+        args.append("--no-audio")
+    args.append(fn)
+
+    subprocess.call(args)
 
 
 # IDK WHAT THIS DOES
-def shader(fn, width, height, shader, ten_bit, outname):
+def shader(fn, width, height, shader, ten_bit, softsubs, outname):
     if not os.path.isdir(shader):
         print("Shaders directory does not exist at: " + shader)
         sys.exit(-2)
@@ -136,7 +139,7 @@ def shader(fn, width, height, shader, ten_bit, outname):
         for file in glob.glob(os.path.join(fn, "*.mkv")):
             files.append(os.path.join(file))
     else:
-        remove_audio_and_subs(fn)
+        remove_audio_and_subs(fn, softsubs)
         fn = "temp.mkv"
         clear()
 
@@ -149,9 +152,11 @@ def shader(fn, width, height, shader, ten_bit, outname):
     )
     cg_choice = cg_menu.show()
     if cg_choice == 0:
-        avc_shader(fn, width, height, shader, ten_bit, outname, files=files)
+        avc_shader(fn, width, height, shader, ten_bit, softsubs, outname,
+                   files=files)
     elif cg_choice == 1:
-        hevc_shader(fn, width, height, shader, ten_bit, outname, files=files)
+        hevc_shader(fn, width, height, shader, ten_bit, softsubs, outname,
+                    files=files)
     else:
         print("Cancel")
         sys.exit(-2)
@@ -165,7 +170,8 @@ def shader(fn, width, height, shader, ten_bit, outname):
 
 # Video settings 264
 
-def avc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
+def avc_shader(fn, width, height, shader, ten_bit, softsubs, outname,
+               files=[]):
     clear()
 
     # ALWAYS 10 BIT BC FOR SOME REASON IT DIDNT DETECTED 10 BIT ON THE ORIGINAL
@@ -227,7 +233,7 @@ def avc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
     else:
         i = 0
         for f in files:
-            remove_audio_and_subs(f)
+            remove_audio_and_subs(f, softsubs)
             clear()
             name = f.split("/")
             name = name[len(name) - 1]
@@ -256,7 +262,8 @@ def avc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
 
 # Video settings 265
 
-def hevc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
+def hevc_shader(fn, width, height, shader, ten_bit, softsubs, outname,
+                files=[]):
     clear()
     # ALWAYS 10BIT BEACUSE IT DOESNT DETECT 10 BIT
 
@@ -317,7 +324,7 @@ def hevc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
     else:
         i = 0
         for f in files:
-            remove_audio_and_subs(f)
+            remove_audio_and_subs(f, softsubs)
             clear()
             name = f.split("/")
             name = name[len(name) - 1]
