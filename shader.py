@@ -1,328 +1,445 @@
-import subprocess, os, sys,glob
-from pymediainfo import MediaInfo
-from pymkv import MKVFile
-from utils import clear
+import glob
+import os
+import subprocess
+import sys
+
 from simple_term_menu import TerminalMenu
+
 from consts import *
+from utils import current_date, clear
 
-#MODE SELECTION
-def FHDMenu(shader_dir):
-    mode_menu = TerminalMenu(
-        ["Mode A (High Quality, Medium Artifacts)",
-        "Mode B (Medium Quality, Minor Artifacts)",
-        "Mode C (Unnoticeable Quality Improvements)",
-        "Mode A+A (Higher Quality, Might overshapen the image)",
-        "Mode B+B (RECOMMENDED. High Quality, Minor Artifacts)",
-        "Mode C+A (Low Quality, Minor Artifacts)"
-        ],
-        title="Please refer to the Anime4k Wiki for more info\nand try the shaders on mpv beforehand to know whats best for you\nChoose Shader Preset:"
-    )
-    mode_choice = mode_menu.show()
 
-    if mode_choice == None:
-        print("Canceling")
-        sys.exit(-1)
+# Menus
 
-    #Apply Shaders
+def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
+    """
+    Select a shader for FHD or higher resolution videos.
+
+    Args:
+        shader_path: path the shaders are located at
+        skip_menus: menu skipping options passed from command line
+
+    Returns:
+        Shader string with selected shaders
+    """
+
+    mode_choice = None
+    if "shader" in skip_menus and skip_menus['shader'] is not None:
+        mode_choice = int(skip_menus['shader'])
+        if mode_choice < 0 or mode_choice > 5:
+            mode_choice = None
+    if mode_choice is None:
+        mode_menu = TerminalMenu(
+            [
+                "Mode A (High Quality, Medium Artifacts)",
+                "Mode B (Medium Quality, Minor Artifacts)",
+                "Mode C (Unnoticeable Quality Improvements)",
+                "Mode A+A (Higher Quality, Might Oversharpen)",
+                "Mode B+B (RECOMMENDED. High Quality, Minor Artifacts)",
+                "Mode C+A (Low Quality, Minor Artifacts)"
+            ],
+            title="Please refer to the Anime4k Wiki for more info and try the\n shaders on mpv beforehand to know what's best for you.\nChoose Shader Preset:"
+        )
+        mode_choice = mode_menu.show()
+
+        if mode_choice is None:
+            print("Canceling")
+            sys.exit(-1)
+
     if mode_choice == 0:
-        s = os.path.join(shader_dir, Clamp_Highlights)
+        s = os.path.join(shader_path, Clamp_Highlights)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Restore_CNN_VL)
+        s = s + os.path.join(shader_path, Restore_CNN_VL)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Upscale_CNN_x2_VL)
+        s = s + os.path.join(shader_path, Upscale_CNN_x2_VL)
         s = s + ":"
-        s = s + os.path.join(shader_dir, AutoDownscalePre_x2)
+        s = s + os.path.join(shader_path, AutoDownscalePre_x2)
         s = s + ":"
-        s = s + os.path.join(shader_dir, AutoDownscalePre_x4)
+        s = s + os.path.join(shader_path, AutoDownscalePre_x4)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Upscale_CNN_x2_M)
+        s = s + os.path.join(shader_path, Upscale_CNN_x2_M)
         return s
     elif mode_choice == 1:
-        s = os.path.join(shader_dir, Clamp_Highlights)
+        s = os.path.join(shader_path, Clamp_Highlights)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Restore_CNN_Soft_VL)
+        s = s + os.path.join(shader_path, Restore_CNN_Soft_VL)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Upscale_CNN_x2_VL)
+        s = s + os.path.join(shader_path, Upscale_CNN_x2_VL)
         s = s + ":"
-        s = s + os.path.join(shader_dir, AutoDownscalePre_x2)
+        s = s + os.path.join(shader_path, AutoDownscalePre_x2)
         s = s + ":"
-        s = s + os.path.join(shader_dir, AutoDownscalePre_x4)
+        s = s + os.path.join(shader_path, AutoDownscalePre_x4)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Upscale_CNN_x2_M)
+        s = s + os.path.join(shader_path, Upscale_CNN_x2_M)
         return s
     elif mode_choice == 2:
-        s = os.path.join(shader_dir, Clamp_Highlights)
+        s = os.path.join(shader_path, Clamp_Highlights)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Upscale_Denoise_CNN_x2_VL)
+        s = s + os.path.join(shader_path, Upscale_Denoise_CNN_x2_VL)
         s = s + ":"
-        s = s + os.path.join(shader_dir, AutoDownscalePre_x2)
+        s = s + os.path.join(shader_path, AutoDownscalePre_x2)
         s = s + ":"
-        s = s + os.path.join(shader_dir, AutoDownscalePre_x4)
+        s = s + os.path.join(shader_path, AutoDownscalePre_x4)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Upscale_CNN_x2_M)
+        s = s + os.path.join(shader_path, Upscale_CNN_x2_M)
         return s
     elif mode_choice == 3:
-        s = os.path.join(shader_dir, Clamp_Highlights)
+        s = os.path.join(shader_path, Clamp_Highlights)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Restore_CNN_VL)
+        s = s + os.path.join(shader_path, Restore_CNN_VL)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Upscale_CNN_x2_VL)
+        s = s + os.path.join(shader_path, Upscale_CNN_x2_VL)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Restore_CNN_M)
+        s = s + os.path.join(shader_path, Restore_CNN_M)
         s = s + ":"
-        s = s + os.path.join(shader_dir, AutoDownscalePre_x2)
+        s = s + os.path.join(shader_path, AutoDownscalePre_x2)
         s = s + ":"
-        s = s + os.path.join(shader_dir, AutoDownscalePre_x4)
+        s = s + os.path.join(shader_path, AutoDownscalePre_x4)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Upscale_CNN_x2_M)
+        s = s + os.path.join(shader_path, Upscale_CNN_x2_M)
         return s
     elif mode_choice == 4:
-        s = os.path.join(shader_dir, Clamp_Highlights)
+        s = os.path.join(shader_path, Clamp_Highlights)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Restore_CNN_Soft_VL)
+        s = s + os.path.join(shader_path, Restore_CNN_Soft_VL)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Upscale_CNN_x2_VL)
+        s = s + os.path.join(shader_path, Upscale_CNN_x2_VL)
         s = s + ":"
-        s = s + os.path.join(shader_dir, AutoDownscalePre_x2)
+        s = s + os.path.join(shader_path, AutoDownscalePre_x2)
         s = s + ":"
-        s = s + os.path.join(shader_dir, AutoDownscalePre_x4)
+        s = s + os.path.join(shader_path, AutoDownscalePre_x4)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Restore_CNN_Soft_M)
+        s = s + os.path.join(shader_path, Restore_CNN_Soft_M)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Upscale_CNN_x2_M)
+        s = s + os.path.join(shader_path, Upscale_CNN_x2_M)
         return s
     elif mode_choice == 5:
-        s = os.path.join(shader_dir, Clamp_Highlights)
+        s = os.path.join(shader_path, Clamp_Highlights)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Upscale_Denoise_CNN_x2_VL)
+        s = s + os.path.join(shader_path, Upscale_Denoise_CNN_x2_VL)
         s = s + ":"
-        s = s + os.path.join(shader_dir, AutoDownscalePre_x2)
+        s = s + os.path.join(shader_path, AutoDownscalePre_x2)
         s = s + ":"
-        s = s + os.path.join(shader_dir, AutoDownscalePre_x4)
+        s = s + os.path.join(shader_path, AutoDownscalePre_x4)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Restore_CNN_M)
+        s = s + os.path.join(shader_path, Restore_CNN_M)
         s = s + ":"
-        s = s + os.path.join(shader_dir, Upscale_CNN_x2_M)
+        s = s + os.path.join(shader_path, Upscale_CNN_x2_M)
         return s
+    else:
+        print("Invalid shader mode choice")
+        sys.exit(-1)
 
-#MACROS OR SOMETHING
 
-def remove_audio_and_subs(fn):
-    subprocess.call([
+# Core
+
+def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
+    """
+    Remove audio and optionally subtitles from a file.
+
+    Args:
+        fn: media file path
+        softsubs: true if subtitles should be removed
+        softaudio: true if audio should be removed
+    """
+
+    args = [
         "mkvmerge",
         "-o",
-        "temp.mkv",
-        #"--no-subtitles",
-        #"--no-audio",
-        fn
-    ])
+        "temp.mkv"
+    ]
+    if softsubs:
+        args.append("--no-subtitles")
+    if softaudio:
+        args.append("--no-audio")
+    args.append(fn)
 
-#IDK WHAT THIS DOES
-def shader(fn, width, height, shader, ten_bit, outname):
-    clear()  
+    subprocess.call(args)
+
+
+def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
+           language: str, softsubs: bool, softaudio: bool, skip_menus: dict,
+           outname: str):
+    """
+    Select encoding and start the encoding process.
+
+    Args:
+        fn: input media path
+        width: output width
+        height: output height
+        shader_path: path the shaders are located at
+        ten_bit: true if the input media is a 10 bit source
+        language: optional desired audio track language
+        softsubs: true if subtitles should be removed
+        softaudio: true if audio should be removed
+        skip_menus: menu skipping options passed from command line
+        outname: output path
+    """
+
+    if not os.path.isdir(shader_path):
+        print("Shaders directory does not exist at: {0}".format(shader_path))
+        sys.exit(-2)
+
+    # Create temp.mkv if input path is a single file
+    clear()
     files = []
-    if os.path.isdir(fn):   
+    if os.path.isdir(fn):
         for file in glob.glob(os.path.join(fn, "*.mkv")):
             files.append(os.path.join(file))
     else:
-        remove_audio_and_subs(fn)
-        fn = "temp.mkv"
+        if fn != "temp.mkv":
+            remove_audio_and_subs(fn, softsubs, softaudio)
+            fn = "temp.mkv"
         clear()
 
-#SELECT ENCODER 264/265
-    cg_menu = TerminalMenu(
-        ["X264 (Medium Quality/Size ratio, Fast)",
-        "X265 (High Quality/Size ratio, Slow)"
-        ],
-        title="Choose your video codec."
-    )
-    cg_choice = cg_menu.show()
-    if cg_choice == 0:
-        avc_shader(fn, width, height, shader, ten_bit, outname, files=files)
-    elif cg_choice == 1:
-        hevc_shader(fn, width, height, shader, ten_bit, outname, files=files)
-    else:
-        print("Cancel")
-        sys.exit(-2)
+    # Select encoder
+    codec = ""
+    encoder = ""
 
-#REMOVE TEMP OR SOMETHING
+    if "encoder" in skip_menus and skip_menus['encoder'] is not None:
+        encoder = skip_menus['encoder']
+        if encoder != 'cpu' and encoder != 'nvenc' and encoder != 'amf':
+            print("Unsupported encoder: {0}".format(encoder))
+            sys.exit(-2)
+    if "codec" in skip_menus and skip_menus['codec'] is not None:
+        codec = skip_menus['codec']
+        if codec == 'x264':
+            codec = 'h264'
+            encoder = 'cpu'
+        elif codec == 'x265':
+            codec = 'hevc'
+            encoder = 'cpu'
+        elif codec == 'h265':
+            codec = 'hevc'
+        if codec != 'h264' and codec != 'hevc':
+            print("Unsupported codec={0}".format(encoder))
+            sys.exit(-2)
+    if codec == "" or encoder == "":
+        cg_menu = TerminalMenu(
+            [
+                "CPU X264 (Medium Quality/Size ratio, Fast)",
+                "CPU X265 (High Quality/Size ratio, Slow)",
+                "NVIDIA GPU H264 (NVENC)",
+                "NVIDIA GPU HEVC (NVENC)",
+                "AMD GPU H264 (AMF)",
+                "AMD GPU HEVC (AMF)"
+            ],
+            title="Choose Video Codec:"
+        )
+        cg_choice = cg_menu.show()
+        if cg_choice == 0:
+            codec = "h264"
+            encoder = "cpu"
+        elif cg_choice == 1:
+            codec = "hevc"
+            encoder = "cpu"
+        elif cg_choice == 2:
+            codec = "h264"
+            encoder = "nvenc"
+        elif cg_choice == 3:
+            codec = "hevc"
+            encoder = "nvenc"
+        elif cg_choice == 4:
+            codec = "h264"
+            encoder = "amf"
+        elif cg_choice == 5:
+            codec = "hevc"
+            encoder = "amf"
+        else:
+            print("Cancel")
+            sys.exit(-2)
+
+    start_encoding(codec, encoder, fn, width, height, shader_path, ten_bit,
+                   language, softsubs, softaudio, skip_menus, outname, files)
+
+    # Delete temp.mkv
     if os.path.isdir(fn):
         os.remove("temp.mkv")
     else:
         os.remove(fn)
-    
-#Video settings 264
 
-def avc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
+
+def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
+                   shader_path: str, ten_bit: bool, language: str,
+                   softsubs: bool, softaudio: bool, skip_menus: dict,
+                   outname: str, files):
+    """
+    Start the encoding of input file(s) to the specified encoding using the CPU.
+
+    Args:
+        codec: h264/hevc
+        encoder: cpu/nvenc/amf
+        fn: input media path
+        width: output width
+        height: output height
+        shader_path: path the shaders are located at
+        ten_bit: true if the input media is a 10 bit source
+        language: optional desired audio track language
+        softsubs: true if subtitles should be removed
+        softaudio: true if audio should be removed
+        skip_menus: menu skipping options passed from command line
+        outname: output path
+        files: list of input media file paths, empty if only one
+    """
+
     clear()
 
-#ALWAYS 10 BIT BC FOR SOME REASON IT DIDNT DETECTED 10 BIT ON THE ORIGINAL
-    format = "yuv420p10le"
-
-#detect width and height of video.
-    if len(files) == 0:
-        _m = MediaInfo.parse(fn)
+    if ten_bit:
+        format = "yuv420p10le"
     else:
-        _m = MediaInfo.parse(files[0])
-    track_width = -1
-    for t in _m.tracks:
-        if t.track_type == 'Video':
-            track_width = t.width
-            str_shaders = FHDMenu(shader)
+        format = "yuv420p"
+    # AMD GPU Encoding only supports "vaapi_vld"
+    # I can't seem to find what this actually is.
+    if encoder == "amf":
+        format = "vaapi_vld"
+
+    # Open shaders menu
+    str_shaders = menu_fhd_shaders(shader_path, skip_menus)
     clear()
 
-#Select Codec Presets
-    encoder_preset = [
-        "veryfast", "fast", "medium", "slow", "veryslow"
-    ]
-    codec_preset = encoder_preset[TerminalMenu(encoder_preset, title="Choose your encoder preset:").show()]
+    # Select Codec Presets
+    if encoder == "cpu" or encoder == "nvenc":
+        codec_presets = []
+        if encoder == "cpu":
+            codec_presets = [
+                "ultrafast", "veryfast", "fast", "medium", "slow", "veryslow"
+            ]
+        elif encoder == "nvenc":
+            codec_presets = ["fast", "medium", "slow", "lossless"]
+        codec_preset = None
+        if "preset" in skip_menus and skip_menus['preset'] is not None:
+            codec_preset = skip_menus['preset']
+            if codec_preset not in codec_presets:
+                codec_preset = None
+        if codec_preset is None:
+            codec_preset = codec_presets[
+                TerminalMenu(codec_presets,
+                             title="Choose Encoder Preset:").show()]
 
-    crf = input("Insert compression factor (CRF) 0-51\n0 = Lossless | 23 = Default | 51 = Highest compression\n")
+    comp_level = ""
+    if encoder == "cpu":
+        if "crf" in skip_menus and skip_menus['crf'] is not None:
+            crf = int(skip_menus['crf'])
+            if 0 <= crf <= 51:
+                comp_level = str(crf)
+            else:
+                comp_level = "23"
+        else:
+            comp_level = input(
+                "Insert compression factor (CRF) 0-51\n0 = Lossless | 23 = Default | 51 = Highest compression\n"
+            )
+            if comp_level == "" or comp_level is None:
+                comp_level = "23"
+    elif encoder == "nvenc" or encoder == "amf":
+        if "qp" in skip_menus and skip_menus['qp'] is not None:
+            qp = int(skip_menus['qp'])
+            if 0 <= qp <= 51:
+                comp_level = str(qp)
+            else:
+                comp_level = "24"
+        else:
+            comp_level = input(
+                "Insert Quantization Parameter (QP) 0-51\n0 = Lossless | 24 = Default | 51 = Highest compression\n"
+            )
+            if comp_level == "" or comp_level is None:
+                comp_level = "24"
 
-#PRINT INFO
+    # Print Info
     print("File: " + fn)
     print("Using the following shaders:")
     print(str_shaders)
-    print("Encoding with preset: " +  codec_preset + " crf=" + crf)
+    if encoder == "cpu":
+        print("Encoding with preset: {0} crf={1}".format(codec_preset,
+                                                         comp_level))
+    elif encoder == "nvenc":
+        print("Encoding with preset: {0} qp={1}".format(codec_preset,
+                                                        comp_level))
+    elif encoder == "amf":
+        print("Encoding with preset: qp={0}".format(comp_level))
+    print("Start time: " + current_date())
     import time
     time.sleep(3)
-    #clear()
+    # clear()
 
-#ENCODE
-    if len(files) == 0:
-        subprocess.call([
-            "mpv",
-            "--vf=format=" + format,
-            fn,
-            "--profile=gpu-hq",
-            "--scale=ewa_lanczossharp",
-            "--cscale=ewa_lanczossharp",
-            "--video-sync=display-resample",
-            "--interpolation",
-            "--tscale=oversample",
-            '--vf=gpu=w=' + str(width) + ':h=' + str(height),
-            "--glsl-shaders=" + str_shaders,
-            "--oac=libopus",
-            "--oacopts=b=192k",
-            "--ovc=libx264",
-            '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(crf) + ',aq-mode=3,psy-rd=1.0,bf=6',
-            '--vf-pre=sub',
-            '--o=' + outname
-        ])
-    else:
-        i = 0
-        for f in files:
-            remove_audio_and_subs(f)
-            clear()
-            name = f.split("/")
-            name = name[len(name) - 1]
-            subprocess.call([
-                "mpv",
-                "--vf=format=" + format,
-                "temp.mkv",
-                "--profile=gpu-hq",
-                "--scale=ewa_lanczossharp",
-                "--cscale=ewa_lanczossharp",
-                "--video-sync=display-resample",
-                "--interpolation",
-                "--tscale=oversample",
-                '--vf=gpu=w=' + str(width) + ':h=' + str(height),
-                "--glsl-shaders=" + str_shaders,
-                "--oac=libopus",
-                "--oacopts=b=192k",
-                "--ovc=libx264",
-                '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(crf) + ',aq-mode=3,psy-rd=1.0,bf=8',
-                '--vf-pre=sub',
-                '--o=' + os.path.join(outname, name)
-            ])
-            i = i + 1
-
-
-
-#Video settings 265
-
-def hevc_shader(fn, width, height, shader, ten_bit, outname, files=[]):
-    clear()
-#ALWAYS 10BIT BEACUSE IT DOESNT DETECT 10 BIT
-
-    format = "yuv420p10le"
-
-
-#detect width and height of video.
-    if len(files) == 0:
-        _m = MediaInfo.parse(fn)
-    else:
-        _m = MediaInfo.parse(files[0])
-    track_width = -1
-    for t in _m.tracks:
-        if t.track_type == 'Video':
-            track_width = t.width
-            str_shaders = FHDMenu(shader)
-    clear()
-
-#Select Codec Presets
-    encoder_preset = [
-        "veryfast", "fast", "medium", "slow", "veryslow"
+    # Encode
+    encoding_args = [
+        "mpv",
+        "--vf=format=" + format,
+        "--profile=gpu-hq",
+        "--scale=ewa_lanczossharp",
+        "--cscale=ewa_lanczossharp",
+        "--video-sync=display-resample",
+        "--interpolation",
+        "--tscale=oversample",
+        '--vf-pre=sub',
+        '--vf=gpu=w=' + str(width) + ':h=' + str(height),
+        "--glsl-shaders=" + str_shaders,
+        "--oac=libopus",
+        "--oacopts=b=192k",
     ]
-    codec_preset = encoder_preset[TerminalMenu(encoder_preset, title="Choose your encoder preset:").show()]
-    crf = input("Insert compression factor (CRF) 0-51\n0 = Lossless | 28 = Default | 51 = Highest compression\n")
+    if language is not None:
+        encoding_args.append("--alang=" + str(language))
 
-#PRINT INFO
-    print("File: " + fn)
-    print("Using the following shaders:")
-    print(str_shaders)
-    print("Encoding with preset: " +  codec_preset + " crf=" + crf)
-    import time
-    time.sleep(3)
-    #clear()
+    # Arguments specific to the encoding and encoder specified
+    if encoder == "cpu":
+        bf = 8
+        if len(files) == 0:
+            bf = 6
 
-#ENCODE
+        if codec == "h264":
+            encoding_args.append("--ovc=libx264")
+        elif codec == "hevc":
+            encoding_args.append("--ovc=libx265")
+        else:
+            print("ERROR: Unknown codec: {0}".format(codec))
+            sys.exit(-2)
+
+        encoding_args.append(
+            '--ovcopts=preset=' + codec_preset + ',level=5.1,crf=' + str(
+                comp_level) + ',aq-mode=3,psy-rd=1.0,bf=' + str(bf))
+    elif encoder == "nvenc":
+        encoding_args.append("--vo=gpu")
+
+        profile = ""
+        if codec == "h264":
+            encoding_args.append("--ovc=h264_nvenc")
+            profile = "high"
+        elif codec == "hevc":
+            encoding_args.append("--ovc=hevc_nvenc")
+            profile = "main10"
+        encoding_args.append(
+            '--ovcopts=rc=constqp,preset=' + codec_preset + ',profile='
+            + profile + ',level=5.1,rc-lookahead=32,qp=' + str(comp_level))
+    elif encoder == "amf":
+        encoding_args.append("--vo=gpu")
+
+        profile = ""
+        if codec == "h264":
+            encoding_args.append("--ovc=h264_vaapi")
+            profile = "high"
+        elif codec == "hevc":
+            encoding_args.append("--ovc=hevc_vaapi")
+            profile = "main10"
+        encoding_args.append(
+            '--ovcopts=rc_mode=cqp,profile=' + profile + ',level=5.1,qp=' + str(
+                comp_level))
+
     if len(files) == 0:
-        subprocess.call([
-            "mpv",
-            "--vf=format=" + format,
-            fn,
-            "--profile=gpu-hq",
-            "--scale=ewa_lanczossharp",
-            "--cscale=ewa_lanczossharp",
-            "--video-sync=display-resample",
-            "--interpolation",
-            "--tscale=oversample",
-            '--vf=gpu=w=' + str(width) + ':h=' + str(height),
-            "--glsl-shaders=" + str_shaders,
-            "--oac=libopus",
-            "--oacopts=b=192k",
-            "--ovc=libx265",
-            '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(crf) + ',aq-mode=3,psy-rd=1.0,bf=6',
-            '--vf-pre=sub',
-            '--o=' + outname
-        ])
+        subprocess.call(encoding_args + ['--o=' + outname, fn])
+        print("End time: " + current_date())
     else:
         i = 0
         for f in files:
-            remove_audio_and_subs(f)
+            remove_audio_and_subs(f, softsubs, softaudio)
             clear()
             name = f.split("/")
             name = name[len(name) - 1]
-            subprocess.call([
-                "mpv",
-                "--vf=format=" + format,
-                "temp.mkv",
-                "--profile=gpu-hq",
-                "--scale=ewa_lanczossharp",
-                "--cscale=ewa_lanczossharp",
-                "--video-sync=display-resample",
-                "--interpolation",
-                "--tscale=oversample",
-                '--vf=gpu=w=' + str(width) + ':h=' + str(height),
-                "--glsl-shaders=" + str_shaders,
-                "--oac=libopus",
-                "--oacopts=b=192k",
-                "--ovc=libx265",
-                '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(crf) + ',aq-mode=3,psy-rd=1.0,bf=8',
-                '--vf-pre=sub',
-                '--o=' + os.path.join(outname, name)
-            ])
+            subprocess.call(
+                encoding_args + [
+                    '--o=' + os.path.join(outname, name) + outname,
+                    "temp.mkv"])
+            subprocess.call(encoding_args)
+            print("End time for file={0}: {1}".format(str(i + 1),
+                                                      current_date()))
             i = i + 1
-    
-    
+        print("End time: {0}".format(current_date()))
