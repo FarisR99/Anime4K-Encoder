@@ -7,6 +7,14 @@
 Makes it easy to encode anime using the MPV shaders with predefined encoding
 profiles!
 
+## Features
+
+* Encode videos with Anime4K shaders easily
+* Encode using x264 or x265
+* Encode using NVENC
+* Extract audio and subtitles automatically
+* Predefined profiles for Anime4K and ffmpeg
+
 ## Key differences to Anime4K-Encoder-4.0.1-
 
 [Anime4K-Encoder-4.0.1-](https://github.com/Secksdendfordff/Anime4K-Encoder-4.0.1-)
@@ -132,13 +140,18 @@ shader (the one this one uses) in real time, or to use them for later (
 Phone, streaming server, etc). This encoding process can take hours or even
 days for episodes and movies.
 
-## Features
+### Examples
 
-* Encode videos with Anime4K shaders easily
-* Encode using x264 or x265
-* Encode using NVENC
-* Extract audio and subtitles automatically
-* Predefined profiles for Anime4K and ffmpeg
+Here is an example of running this script on the movie "Fate/stay night:
+Heaven's Feel III".
+
+Original source - 1080p - 45Mbps bitrate:
+
+![1080p](../media/example-original.png?raw=true)
+
+Output - 4K - 180Mbps bitrate - NVENC H264 Medium - Shaders mode B+B:
+
+![2160p](../media/example-upscaled.png?raw=true)
 
 ## TODO
 
