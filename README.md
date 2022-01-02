@@ -34,7 +34,7 @@ changes. The differences between Anime4K-Encode-4.0.1 and this repository are:
   <br><b>Note</b>: You must run `mux` mode in the directory these files are
   located, as there is no command line argument to specify subs and audio
   locations.
-- Added `--language=<lang>` which will select the language track to burn
+- Added `-al=<lang>`/`--audio_language=<lang>` which will select the language track to burn
   in (`--softaudio` will disable this). Supported values are ISO 639-2
   three-letter language codes as
   stated [here](https://github.com/mpv-player/mpv/blob/master/DOCS/man/options.rst)
