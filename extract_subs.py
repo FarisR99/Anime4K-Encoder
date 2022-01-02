@@ -22,6 +22,7 @@ def extract_subs(fn: str):
         fn: input media file path
     """
 
+    print("Loading file={0}".format(fn))
     mkv = MKVFile(fn)
 
     print("Subtitle extraction start time: " + current_date())

@@ -17,6 +17,7 @@ def extract_audio(fn: str):
         fn: input media file path
     """
 
+    print("Loading file={0}".format(fn))
     mkv = MKVFile(fn)
 
     # Extract tracks from input media
