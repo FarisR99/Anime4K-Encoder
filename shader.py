@@ -23,9 +23,12 @@ def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
         Shader string with selected shaders
     """
 
+    mode_choice = None
     if skip_menus['shader'] is not None:
         mode_choice = int(skip_menus['shader'])
-    else:
+        if mode_choice < 0 or mode_choice > 5:
+            mode_choice = None
+    if mode_choice is None:
         mode_menu = TerminalMenu(
             [
                 "Mode A (High Quality, Medium Artifacts)",
@@ -169,7 +172,7 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
     """
 
     if not os.path.isdir(shader_path):
-        print("Shaders directory does not exist at: " + shader_path)
+        print("Shaders directory does not exist at: {0}".format(shader_path))
         sys.exit(-2)
 
     # Create temp.mkv if input path is a single file
@@ -191,7 +194,7 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
     if skip_menus['encoder'] is not None:
         encoder = skip_menus['encoder']
         if encoder != 'cpu' and encoder != 'nvenc':
-            print("Unsupported encoder={0}".format(encoder))
+            print("Unsupported encoder: {0}".format(encoder))
             sys.exit(-2)
     if skip_menus['codec'] is not None:
         codec = skip_menus['codec']
@@ -282,7 +285,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
     elif encoder == "nvenc":
         codec_presets = ["fast", "medium", "slow", "lossless"]
     else:
-        print("ERROR: Unknown encoder " + encoder)
+        print("ERROR: Unknown encoder: {0}".format(encoder))
         sys.exit(-2)
 
     codec_preset = codec_presets[
@@ -323,9 +326,11 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
     print("Using the following shaders:")
     print(str_shaders)
     if encoder == "cpu":
-        print("Encoding with preset: {0} crf={1}".format(codec_preset, comp_level))
+        print("Encoding with preset: {0} crf={1}".format(codec_preset,
+                                                         comp_level))
     elif encoder == "nvenc":
-        print("Encoding with preset: {0} qp={1}".format(codec_preset, comp_level))
+        print("Encoding with preset: {0} qp={1}".format(codec_preset,
+                                                        comp_level))
     print("Start time: " + current_date())
     import time
     time.sleep(3)
@@ -359,7 +364,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
         elif codec == "hevc":
             encoding_args.append("--ovc=libx265")
         else:
-            print("ERROR: Unknown codec={0}".format(codec))
+            print("ERROR: Unknown codec: {0}".format(codec))
             sys.exit(-2)
 
         encoding_args.append(
@@ -394,6 +399,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
                     '--o=' + os.path.join(outname, name) + outname,
                     "temp.mkv"])
             subprocess.call(encoding_args)
-            print("End time for file=" + str(i + 1) + ": " + current_date())
+            print("End time for file={0}: {1}".format(str(i + 1),
+                                                      current_date()))
             i = i + 1
-        print("End time: " + current_date())
+        print("End time: {0}".format(current_date()))
