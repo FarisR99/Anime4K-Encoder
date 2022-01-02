@@ -24,7 +24,7 @@ def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
     """
 
     mode_choice = None
-    if skip_menus['shader'] is not None:
+    if "shader" in skip_menus and skip_menus['shader'] is not None:
         mode_choice = int(skip_menus['shader'])
         if mode_choice < 0 or mode_choice > 5:
             mode_choice = None
@@ -196,12 +196,12 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
     codec = ""
     encoder = ""
 
-    if skip_menus['encoder'] is not None:
+    if "encoder" in skip_menus and skip_menus['encoder'] is not None:
         encoder = skip_menus['encoder']
         if encoder != 'cpu' and encoder != 'nvenc' and encoder != 'amf':
             print("Unsupported encoder: {0}".format(encoder))
             sys.exit(-2)
-    if skip_menus['codec'] is not None:
+    if "codec" in skip_menus and skip_menus['codec'] is not None:
         codec = skip_menus['codec']
         if codec == 'x264':
             codec = 'h264'
@@ -307,7 +307,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
         elif encoder == "nvenc":
             codec_presets = ["fast", "medium", "slow", "lossless"]
         codec_preset = None
-        if skip_menus['preset'] is not None:
+        if "preset" in skip_menus and skip_menus['preset'] is not None:
             codec_preset = skip_menus['preset']
             if codec_preset not in codec_presets:
                 codec_preset = None
@@ -318,7 +318,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
 
     comp_level = ""
     if encoder == "cpu":
-        if skip_menus['crf'] is not None:
+        if "crf" in skip_menus and skip_menus['crf'] is not None:
             crf = int(skip_menus['crf'])
             if 0 <= crf <= 51:
                 comp_level = str(crf)
@@ -331,7 +331,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
             if comp_level == "" or comp_level is None:
                 comp_level = "23"
     elif encoder == "nvenc" or encoder == "amf":
-        if skip_menus['qp'] is not None:
+        if "qp" in skip_menus and skip_menus['qp'] is not None:
             qp = int(skip_menus['qp'])
             if 0 <= qp <= 51:
                 comp_level = str(qp)
