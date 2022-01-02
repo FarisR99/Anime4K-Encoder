@@ -52,13 +52,11 @@ parser.add_argument("-ss", "--softsubs", required=False,
                     action='store_true',
                     default=False,
                     help="Set this flag if you want to manually mux subtitles and audio when using shader")
-
-help_skip_menus = '''Skip shader/encoding choice menus when using shader
+parser.add_argument("-sm", "--skip_menus", required=False, type=str2dict,
+                    help='''Skip shader/encoding choice menus when using shader
 Example:
  --skip_menus="shader=4,encoder=cpu,codec=h264,preset=fast,crf=23"
- --skip_menus="shader=4,encoder=nvenc,codec=hevc,preset=fast,qp=24"'''
-parser.add_argument("-sm", "--skip_menus", required=False, type=str2dict,
-                    help=help_skip_menus)
+ --skip_menus="shader=4,encoder=nvenc,codec=hevc,preset=fast,qp=24"''')
 
 args = vars(parser.parse_args())
 if args['version']:
