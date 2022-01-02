@@ -156,7 +156,7 @@ def remove_audio_and_subs(fn: str, softsubs: bool):
 
 
 def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
-           softsubs: bool, skip_menus: dict, outname: str):
+           language: str, softsubs: bool, skip_menus: dict, outname: str):
     """
     Select encoding and start the encoding process.
 
@@ -166,6 +166,7 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
         height: output height
         shader_path: path the shaders are located at
         ten_bit: true if the input media is a 10 bit source
+        language: optional desired audio track language
         softsubs: true if audio and subtitles should be removed
         skip_menus: menu skipping options passed from command line
         outname: output path
@@ -245,7 +246,7 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
             sys.exit(-2)
 
     start_encoding(codec, encoder, fn, width, height, shader_path, ten_bit,
-                   softsubs, skip_menus, outname, files)
+                   language, softsubs, skip_menus, outname, files)
 
     # Delete temp.mkv
     if os.path.isdir(fn):
@@ -255,8 +256,8 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
 
 
 def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
-                   shader_path: str, ten_bit: bool, softsubs: bool,
-                   skip_menus: dict, outname: str, files):
+                   shader_path: str, ten_bit: bool, language: str,
+                   softsubs: bool, skip_menus: dict, outname: str, files):
     """
     Start the encoding of input file(s) to the specified encoding using the CPU.
 
@@ -268,6 +269,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
         height: output height
         shader_path: path the shaders are located at
         ten_bit: true if the input media is a 10 bit source
+        language: optional desired audio track language
         softsubs: true if audio and subtitles should be removed
         skip_menus: menu skipping options passed from command line
         outname: output path
@@ -369,6 +371,8 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
         "--oac=libopus",
         "--oacopts=b=192k",
     ]
+    if language is not None:
+        encoding_args.append("--alang=" + str(language))
 
     # Arguments specific to the encoding and encoder specified
     if encoder == "cpu":

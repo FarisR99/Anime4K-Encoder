@@ -57,6 +57,10 @@ parser.add_argument("-sm", "--skip_menus", required=False, type=str2dict,
 Example:
  --skip_menus="shader=4,encoder=cpu,codec=h264,preset=fast,crf=23"
  --skip_menus="shader=4,encoder=nvenc,codec=hevc,preset=fast,qp=24"''')
+parser.add_argument("-l", "--language", required=False, type=str,
+                    help=
+                    '''Set this to the audio track language for the output video.
+This will not do anything if "--softsubs" is used.''')
 
 args = vars(parser.parse_args())
 if args['version']:
@@ -100,7 +104,7 @@ elif mode == "mux":
     mux(fn, output)
 elif mode == "shader":
     shader(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
-           args['softsubs'], args['skip_menus'], output)
+           args['language'], args['softsubs'], args['skip_menus'], output)
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],
