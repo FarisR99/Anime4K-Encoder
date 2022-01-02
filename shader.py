@@ -286,9 +286,6 @@ def cpu_shader(encoding: str, fn: str, width: int, height: int,
     # Arguments specific to the encoding specified
     if encoding == "h264":
         encoding_args.append("--ovc=libx264")
-        encoding_args.append(
-            '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(
-                crf) + ',aq-mode=3,psy-rd=1.0,bf=' + str(bf))
     elif encoding == "hevc":
         encoding_args.append("--ovc=libx265")
     else:
@@ -296,7 +293,7 @@ def cpu_shader(encoding: str, fn: str, width: int, height: int,
         sys.exit(-2)
 
     encoding_args.append(
-        '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(
+        '--ovcopts=preset=' + codec_preset + ',level=5.1,crf=' + str(
             crf) + ',aq-mode=3,psy-rd=1.0,bf=' + str(bf))
 
     if len(files) == 0:
