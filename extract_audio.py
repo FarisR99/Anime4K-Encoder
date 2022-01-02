@@ -9,13 +9,17 @@ from simple_term_menu import TerminalMenu
 from utils import current_date, language_mapping
 
 
-def extract_audio(fn: str):
+def extract_audio(fn: str, out_dir: str):
     """
     Extract audio from a media file.
 
     Args:
         fn: input media file path
+        out_dir: directory where audio files are extracted to
     """
+
+    if out_dir is None:
+        out_dir = ""
 
     print("Loading file={0}".format(fn))
     mkv = MKVFile(fn)
@@ -29,12 +33,12 @@ def extract_audio(fn: str):
             lang = language_mapping[track._language]
             id = str(track._track_id)
             subprocess.call(
-                ['mkvextract', 'tracks', fn, id + ':' + lang + '.' + ext]
+                ['mkvextract', 'tracks', fn, id + ':' + out_dir + + lang + '.' + ext]
             )
     print("Audio extraction end time: " + current_date())
 
     flacs = []
-    for file in glob.glob("*.FLAC"):
+    for file in glob.glob(out_dir + "*.FLAC"):
         flacs.append(file)
     if len(flacs) > 0:
         convert_menu = TerminalMenu(

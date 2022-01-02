@@ -14,13 +14,17 @@ def genExt(codec):
         return "srt"
 
 
-def extract_subs(fn: str):
+def extract_subs(fn: str, out_dir: str):
     """
     Extract subtitles from a media file.
 
     Args:
         fn: input media file path
+        out_dir: directory where subtitles are extracted to
     """
+
+    if out_dir is None:
+        out_dir = ""
 
     print("Loading file={0}".format(fn))
     mkv = MKVFile(fn)
@@ -34,5 +38,5 @@ def extract_subs(fn: str):
             id = str(track._track_id)
 
             subprocess.call(['mkvextract', 'tracks', fn,
-                             id + ':' + lang + '_' + id + '.' + ext])
+                             id + ':' + out_dir + lang + '_' + id + '.' + ext])
     print("Subtitle extraction end time: " + current_date())
