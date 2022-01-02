@@ -142,10 +142,11 @@ days for episodes and movies.
 
 ### Examples
 
-Here is an example of running this script on the movie "Fate/stay night:
-Heaven's Feel III".
+Please view the examples in a new tab/in large to compare.
 
-Original source - 1080p - 45Mbps bitrate:
+#### Fate/stay night: Heaven's Feel III
+
+Input - 1080p - 45Mbps bitrate:
 
 ![1080p](../media/example-original.png?raw=true)
 
