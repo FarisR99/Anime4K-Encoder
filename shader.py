@@ -252,6 +252,8 @@ def cpu_shader(encoding: str, fn: str, width: int, height: int,
     crf = input(
         "Insert compression factor (CRF) 0-51\n0 = Lossless | 23 = Default | 51 = Highest compression\n"
     )
+    if crf == "" or crf is None:
+        crf = "23"
 
     # Print Info
     print("File: " + fn)
