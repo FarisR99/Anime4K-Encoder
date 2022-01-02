@@ -171,8 +171,9 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
         for file in glob.glob(os.path.join(fn, "*.mkv")):
             files.append(os.path.join(file))
     else:
-        remove_audio_and_subs(fn, softsubs)
-        fn = "temp.mkv"
+        if fn != "temp.mkv":
+            remove_audio_and_subs(fn, softsubs)
+            fn = "temp.mkv"
         clear()
 
     # Select encoder
@@ -271,7 +272,10 @@ def start_encoding(encoding: str, encoder: str, fn: str, width: int,
     print("File: " + fn)
     print("Using the following shaders:")
     print(str_shaders)
-    print("Encoding with preset: " + codec_preset + " crf=" + crf)
+    if encoder == "cpu":
+        print("Encoding with preset: " + codec_preset + " crf=" + comp_level)
+    elif encoder == "nvenc":
+        print("Encoding with preset: " + codec_preset + " qp=" + comp_level)
     print("Start time: " + current_date())
     import time
     time.sleep(3)
