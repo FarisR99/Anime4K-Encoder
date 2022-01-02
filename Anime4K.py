@@ -47,10 +47,10 @@ parser.add_argument("-o", "--output", required=False,
                     help="Output filename/directory")
 parser.add_argument("-sz", "--split_length", required=False, type=int,
                     default=10, help="Seconds to split the video in")
-parser.add_argument("-ns", "--no_subtitles", required=False,
+parser.add_argument("-ss", "--softsubs", required=False,
                     action='store_true',
                     default=False,
-                    help="Set this flag if you want to manually burn in subtitles when using shader")
+                    help="Set this flag if you want to manually mux subtitles and audio when using shader")
 
 args = vars(parser.parse_args())
 if args['version']:
@@ -79,7 +79,7 @@ elif mode == "mux":
     mux(fn, outname)
 elif mode == "shader":
     shader(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
-           args['no_subtitles'], outname)
+           args['softsubs'], outname)
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],

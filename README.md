@@ -27,7 +27,7 @@ changes. The differences between Anime4K-Encode-4.0.1 and this repository are:
 - Re-added NVENC support
 - Re-added 10-bit toggling support
 - Removed official support for videos with a resolution lower than FHD
-- Ability to toggle hardsubs via `--no_subtitles`
+- Ability to choose to manually mux subtitles and audio via `--softsubs`
 - Use "shader" as the default mode
 - Use 3840x2160 as the default output WxH
 - Use "./shaders" as the default shaders path
