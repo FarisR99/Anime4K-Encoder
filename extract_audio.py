@@ -33,7 +33,7 @@ def extract_audio(fn: str, out_dir: str):
             lang = language_mapping[track._language]
             id = str(track._track_id)
             subprocess.call(
-                ['mkvextract', 'tracks', fn, id + ':' + out_dir + + lang + '.' + ext]
+                ['mkvextract', 'tracks', fn, id + ':' + out_dir + lang + '.' + ext]
             )
     print("Audio extraction end time: " + current_date())
 
