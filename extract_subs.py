@@ -1,5 +1,6 @@
 import subprocess
 
+from datetime import datetime
 from pymkv import MKVFile
 
 
@@ -22,6 +23,8 @@ def extract_subs(fn: str):
 
     mkv = MKVFile(fn)
 
+    print("Subtitle extraction start time: " + datetime.today().strftime(
+        '%Y-%m-%d %H:%M:%S'))
     tracks = mkv.get_track()
     for track in tracks:
         if track.track_type == 'subtitles':
@@ -31,3 +34,5 @@ def extract_subs(fn: str):
 
             subprocess.call(['mkvextract', 'tracks', fn,
                              id + ':' + lang + '_' + id + '.' + ext])
+    print("Subtitle extraction end time: " + datetime.today().strftime(
+        '%Y-%m-%d %H:%M:%S'))
