@@ -32,9 +32,9 @@ parser.add_argument("-v", "--version", required=False,
 parser.add_argument("-m", "--mode", required=False,
                     default="shader",
                     help="Mode: choose from audio, subs, shader, or mux, split")
-parser.add_argument("-ew", "--width", required=False, type=int,
+parser.add_argument("-ew", "--width", required=False, type=int, default=3840,
                     help="desired width when applying shader")
-parser.add_argument("-eh", "--height", required=False, type=int,
+parser.add_argument("-eh", "--height", required=False, type=int, default=2160,
                     help="desired height when applying shader")
 parser.add_argument("-sd", "--shader_dir", required=False, type=str,
                     default="./shaders",
