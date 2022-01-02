@@ -6,7 +6,7 @@ from consts import *
 from datetime import datetime
 from pymediainfo import MediaInfo
 from simple_term_menu import TerminalMenu
-from utils import clear
+from utils import current_date, clear
 
 
 # Menus
@@ -251,7 +251,7 @@ def cpu_shader(encoding: str, fn: str, width: int, height: int,
     print("Using the following shaders:")
     print(str_shaders)
     print("Encoding with preset: " + codec_preset + " crf=" + crf)
-    print("Start time: " + datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+    print("Start time: " + current_date())
     import time
     time.sleep(3)
     # clear()
@@ -292,7 +292,7 @@ def cpu_shader(encoding: str, fn: str, width: int, height: int,
 
     if len(files) == 0:
         subprocess.call(encoding_args + ['--o=' + outname, fn])
-        print("End time: " + datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+        print("End time: " + current_date())
     else:
         i = 0
         for f in files:
@@ -305,7 +305,6 @@ def cpu_shader(encoding: str, fn: str, width: int, height: int,
                     '--o=' + os.path.join(outname, name) + outname,
                     "temp.mkv"])
             subprocess.call(encoding_args)
-            print("End time for file " + str(
-                i + 1) + ": " + datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+            print("End time for file=" + str(i + 1) + ": " + current_date())
             i = i + 1
-        print("End time: " + datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+        print("End time: " + current_date())

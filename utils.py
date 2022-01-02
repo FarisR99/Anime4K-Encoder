@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from shutil import which
 
 __current_version__ = '1.0.0-SNAPSHOT'
@@ -23,9 +24,18 @@ def credz():
 
 def is_tool(name: str) -> bool:
     """
-    Check if the specified name is installed
+    Returns:
+        true if the specified tool name is installed
     """
     return which(name) is not None
+
+
+def current_date() -> str:
+    """
+    Returns:
+        the current date in the format: YYYY-MM-dd HH-MM-SS
+    """
+    return datetime.today().strftime('%Y-%m-%d %H:%M:%S')
 
 
 def lang_long_to_short(lang: str) -> str:

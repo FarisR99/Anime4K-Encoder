@@ -3,7 +3,7 @@ import os
 
 from pymkv import MKVFile, MKVTrack
 
-from utils import lang_long_to_short, lang_short_to_long
+from utils import current_date, lang_long_to_short, lang_short_to_long
 
 
 def addAudio(source, ext: str):
@@ -82,10 +82,12 @@ def mux(fn: str, out: str):
     addSubs(mkv, "srt")
     addSubs(mkv, "ass")
 
+    print("Mux start time: " + current_date())
     mkv.mux(out)
+    print("Mux end time: " + current_date())
 
     # Clean up
-    print("Cleaning...")
+    print("\nCleaning...")
 
     delete_by_extension("AAC")
     delete_by_extension("MP3")

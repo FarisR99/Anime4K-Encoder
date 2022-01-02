@@ -7,7 +7,7 @@ from datetime import datetime
 from pymkv import MKVFile
 from simple_term_menu import TerminalMenu
 
-from utils import language_mapping
+from utils import current_date, language_mapping
 
 
 def extract_audio(fn: str):
@@ -21,8 +21,7 @@ def extract_audio(fn: str):
     mkv = MKVFile(fn)
 
     # Extract tracks from input media
-    print("Audio extraction start time: " + datetime.today().strftime(
-        '%Y-%m-%d %H:%M:%S'))
+    print("Audio extraction start time: " + current_date())
     tracks = mkv.get_track()
     for track in tracks:
         if track.track_type == 'audio':
@@ -32,8 +31,7 @@ def extract_audio(fn: str):
             subprocess.call(
                 ['mkvextract', 'tracks', fn, id + ':' + lang + '.' + ext]
             )
-    print("Audio extraction end time: " + datetime.today().strftime(
-        '%Y-%m-%d %H:%M:%S'))
+    print("Audio extraction end time: " + current_date())
 
     flacs = []
     for file in glob.glob("*.FLAC"):
@@ -45,8 +43,7 @@ def extract_audio(fn: str):
         )
         convert_choice = convert_menu.show()
         if convert_choice == 0:
-            print("Conversion start time: " + datetime.today().strftime(
-                '%Y-%m-%d %H:%M:%S'))
+            print("Conversion start time: " + current_date())
             for f in flacs:
                 br_menu = TerminalMenu(
                     ["192K", "256K", "320K"],
@@ -78,5 +75,4 @@ def extract_audio(fn: str):
                 ])
                 time.sleep(1)
                 os.remove(f)
-            print("Conversion end time: " + datetime.today().strftime(
-                '%Y-%m-%d %H:%M:%S'))
+            print("Conversion end time: " + current_date())
