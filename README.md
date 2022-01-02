@@ -17,6 +17,8 @@ changes. The differences between Anime4K-Encode-4.0.1 and this repository are:
 
 - Cleaned up code
 - Re-added NVENC support
+- Re-added 10-bit toggling support
+- Removed official support for videos with a resolution lower than FHD
 - Ability to toggle hardsubs via `--no_subtitles`
 - Use "shader" as the default mode
 - Use 3840x2160 as the default output WxH
@@ -46,7 +48,7 @@ Download the latest shaders
 from [here](https://github.com/bloc97/Anime4K/releases). Put them all into one
 folder, for example called *shaders*
 
-## Burning in subs
+### Burning in subs
 
 If there's a default sub track, it will be burned in automatically. If you want
 to add softsubs, you will have to run the script with `--no_subtitles` and add
@@ -55,7 +57,7 @@ them later.
 This can also fix some audio problems that you may encounter during encoding,
 which may or may not slow down your encoding progress.
 
-## Upscaling your first Anime!
+### Upscaling your first Anime!
 
 Assuming your Anime Movie/Episode is called *input.mkv* and has a resolution of
 1920x1080, and you want to upscale it to 4K (3840x2160), here are the commands
@@ -74,7 +76,7 @@ mode argument is also optional as it defaults to shader.
 4. Your file should now be in *video_upscale.mkv*
 5. Done!
 
-## If you didn't burn in the subs you need to add them this way.
+### Burning softsubs
 
 1. Extract the audio and/or subtitles from the original file
 
@@ -101,14 +103,14 @@ python3 Anime4K.py --help
 
 ## **[Optional]** Encoding ffmpeg progressbar
 
-To get a overview of your current encoding of ffmpeg you may install
+To get an overview of your current encoding of ffmpeg, you may install
 the [ffmpeg-progressbar-cli](https://github.com/sidneys/ffmpeg-progressbar-cli)
 
 ```
 npm install --global ffmpeg-progressbar-cli
 ```
 
-*Don't worry the script will also work with normal ffmpeg.*
+*Don't worry, the script will also work with normal ffmpeg.*
 
 ## Misc
 
@@ -120,6 +122,9 @@ every user:
   C+A > B+B > A+A.
 - The encoding preset doesn't noticeably affect the encoding speed (only tested
   from fastest to medium)
+
+NVENC support has been re-added as Ampere NVENC is pretty good in my experience
+with an RTX 3090. I would not recommend using this on 10-series cards or older.
 
 The best way to use the shaders is in real time, its intended purpose. The
 purpose of this program is for those that can't run the HQ version of the
@@ -137,7 +142,6 @@ days for episodes and movies.
 
 ## TODO
 
-- Batch encoding.
 - Adding extra shaders that are not included in the [Modes] by default (Darken,
   Thin, Etc)
 
