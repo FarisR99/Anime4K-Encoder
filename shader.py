@@ -205,7 +205,7 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
 def cpu_shader(encoding: str, fn: str, width: int, height: int,
                shader_path: str,
                ten_bit: bool, softsubs: bool, outname: str,
-               files: list[str] = []):
+               files):
     """
     Start the encoding of input file(s) to the specified encoding.
 
