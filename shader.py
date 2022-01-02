@@ -186,13 +186,11 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
     )
     cg_choice = cg_menu.show()
     if cg_choice == 0:
-        cpu_h264_shader(fn, width, height, shader_path, ten_bit, softsubs,
-                        outname,
-                        files=files)
+        cpu_shader("h264", fn, width, height, shader_path, ten_bit, softsubs,
+                   outname, files)
     elif cg_choice == 1:
-        cpu_hevc_shader(fn, width, height, shader_path, ten_bit, softsubs,
-                        outname,
-                        files=files)
+        cpu_shader("hevc", fn, width, height, shader_path, ten_bit, softsubs,
+                   outname, files)
     else:
         print("Cancel")
         sys.exit(-2)
@@ -204,13 +202,15 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
         os.remove(fn)
 
 
-def cpu_h264_shader(fn: str, width: int, height: int, shader_path: str,
-                    ten_bit: bool, softsubs: bool, outname: str,
-                    files: list[str] = []):
+def cpu_shader(encoding: str, fn: str, width: int, height: int,
+               shader_path: str,
+               ten_bit: bool, softsubs: bool, outname: str,
+               files: list[str] = []):
     """
-    Start the encoding of input file(s) to H264.
+    Start the encoding of input file(s) to the specified encoding.
 
     Args:
+        encoding: h264/hevc
         fn: input media path
         width: output width
         height: output height
@@ -242,7 +242,7 @@ def cpu_h264_shader(fn: str, width: int, height: int, shader_path: str,
 
     # Select Codec Presets
     encoder_preset = [
-        "veryfast", "fast", "medium", "slow", "veryslow"
+        "ultrafast", "veryfast", "fast", "medium", "slow", "veryslow"
     ]
     codec_preset = encoder_preset[
         TerminalMenu(encoder_preset,
@@ -263,27 +263,44 @@ def cpu_h264_shader(fn: str, width: int, height: int, shader_path: str,
     # clear()
 
     # Encode
+    encoding_args = [
+        "mpv",
+        "--vf=format=" + format,
+        "--profile=gpu-hq",
+        "--scale=ewa_lanczossharp",
+        "--cscale=ewa_lanczossharp",
+        "--video-sync=display-resample",
+        "--interpolation",
+        "--tscale=oversample",
+        '--vf-pre=sub',
+        '--vf=gpu=w=' + str(width) + ':h=' + str(height),
+        "--glsl-shaders=" + str_shaders,
+        "--oac=libopus",
+        "--oacopts=b=192k",
+    ]
+
+    bf = 8
     if len(files) == 0:
-        subprocess.call([
-            "mpv",
-            "--vf=format=" + format,
-            fn,
-            "--profile=gpu-hq",
-            "--scale=ewa_lanczossharp",
-            "--cscale=ewa_lanczossharp",
-            "--video-sync=display-resample",
-            "--interpolation",
-            "--tscale=oversample",
-            '--vf=gpu=w=' + str(width) + ':h=' + str(height),
-            "--glsl-shaders=" + str_shaders,
-            "--oac=libopus",
-            "--oacopts=b=192k",
-            "--ovc=libx264",
+        bf = 6
+
+    # Arguments specific to the encoding specified
+    if encoding == "h264":
+        encoding_args.append("--ovc=libx264")
+        encoding_args.append(
             '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(
-                crf) + ',aq-mode=3,psy-rd=1.0,bf=6',
-            '--vf-pre=sub',
-            '--o=' + outname
-        ])
+                crf) + ',aq-mode=3,psy-rd=1.0,bf=' + str(bf))
+    elif encoding == "hevc":
+        encoding_args.append("--ovc=libx265")
+    else:
+        print("ERROR: Unknown encoding " + encoding)
+        sys.exit(-2)
+
+    encoding_args.append(
+        '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(
+            crf) + ',aq-mode=3,psy-rd=1.0,bf=' + str(bf))
+
+    if len(files) == 0:
+        subprocess.call(encoding_args + ['--o=' + outname, fn])
     else:
         i = 0
         for f in files:
@@ -291,133 +308,9 @@ def cpu_h264_shader(fn: str, width: int, height: int, shader_path: str,
             clear()
             name = f.split("/")
             name = name[len(name) - 1]
-            subprocess.call([
-                "mpv",
-                "--vf=format=" + format,
-                "temp.mkv",
-                "--profile=gpu-hq",
-                "--scale=ewa_lanczossharp",
-                "--cscale=ewa_lanczossharp",
-                "--video-sync=display-resample",
-                "--interpolation",
-                "--tscale=oversample",
-                '--vf=gpu=w=' + str(width) + ':h=' + str(height),
-                "--glsl-shaders=" + str_shaders,
-                "--oac=libopus",
-                "--oacopts=b=192k",
-                "--ovc=libx264",
-                '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(
-                    crf) + ',aq-mode=3,psy-rd=1.0,bf=8',
-                '--vf-pre=sub',
-                '--o=' + os.path.join(outname, name)
-            ])
-            i = i + 1
-
-
-def cpu_hevc_shader(fn: str, width: int, height: int, shader_path: str,
-                    ten_bit: bool, softsubs: bool, outname: str,
-                    files: list[str] = []):
-    """
-    Start the encoding of input file(s) to H265/HEVC.
-
-    Args:
-        fn: input media path
-        width: output width
-        height: output height
-        shader_path: path the shaders are located at
-        ten_bit: true if the input media is a 10 bit source
-        softsubs: true if audio and subtitles should be removed
-        outname: output path
-        files: list of input media file paths, empty if only one
-    """
-
-    clear()
-
-    if ten_bit:
-        format = "yuv420p10le"
-    else:
-        format = "yuv420p"
-
-    # Detect width and height of input video.
-    if len(files) == 0:
-        _m = MediaInfo.parse(fn)
-    else:
-        _m = MediaInfo.parse(files[0])
-    track_width = -1
-    for t in _m.tracks:
-        if t.track_type == 'Video':
-            track_width = t.width
-            str_shaders = menu_fhd_shaders(shader_path)
-    clear()
-
-    # Select Codec Presets
-    encoder_preset = [
-        "veryfast", "fast", "medium", "slow", "veryslow"
-    ]
-    codec_preset = encoder_preset[
-        TerminalMenu(encoder_preset,
-                     title="Choose your encoder preset:").show()
-    ]
-    crf = input(
-        "Insert compression factor (CRF) 0-51\n0 = Lossless | 28 = Default | 51 = Highest compression\n"
-    )
-
-    # Print Info
-    print("File: " + fn)
-    print("Using the following shaders:")
-    print(str_shaders)
-    print("Encoding with preset: " + codec_preset + " crf=" + crf)
-    import time
-    time.sleep(3)
-    # clear()
-
-    # Encode
-    if len(files) == 0:
-        subprocess.call([
-            "mpv",
-            "--vf=format=" + format,
-            fn,
-            "--profile=gpu-hq",
-            "--scale=ewa_lanczossharp",
-            "--cscale=ewa_lanczossharp",
-            "--video-sync=display-resample",
-            "--interpolation",
-            "--tscale=oversample",
-            '--vf=gpu=w=' + str(width) + ':h=' + str(height),
-            "--glsl-shaders=" + str_shaders,
-            "--oac=libopus",
-            "--oacopts=b=192k",
-            "--ovc=libx265",
-            '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(
-                crf) + ',aq-mode=3,psy-rd=1.0,bf=6',
-            '--vf-pre=sub',
-            '--o=' + outname
-        ])
-    else:
-        i = 0
-        for f in files:
-            remove_audio_and_subs(f, softsubs)
-            clear()
-            name = f.split("/")
-            name = name[len(name) - 1]
-            subprocess.call([
-                "mpv",
-                "--vf=format=" + format,
-                "temp.mkv",
-                "--profile=gpu-hq",
-                "--scale=ewa_lanczossharp",
-                "--cscale=ewa_lanczossharp",
-                "--video-sync=display-resample",
-                "--interpolation",
-                "--tscale=oversample",
-                '--vf=gpu=w=' + str(width) + ':h=' + str(height),
-                "--glsl-shaders=" + str_shaders,
-                "--oac=libopus",
-                "--oacopts=b=192k",
-                "--ovc=libx265",
-                '--ovcopts=preset=' + codec_preset + ',level=6.1,crf=' + str(
-                    crf) + ',aq-mode=3,psy-rd=1.0,bf=8',
-                '--vf-pre=sub',
-                '--o=' + os.path.join(outname, name)
-            ])
+            subprocess.call(
+                encoding_args + [
+                    '--o=' + os.path.join(outname, name) + outname,
+                    "temp.mkv"])
+            subprocess.call(encoding_args)
             i = i + 1
