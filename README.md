@@ -10,8 +10,7 @@ profiles!
 ## Features
 
 * Encode videos with Anime4K shaders easily
-* Encode using x264 or x265
-* Encode using NVENC
+* Encode using x264, x265, NVIDIA NVENC or AMD AMF
 * Extract audio and subtitles automatically
 * Predefined profiles for Anime4K and ffmpeg
 
@@ -32,11 +31,14 @@ changes. The differences between Anime4K-Encode-4.0.1 and this repository are:
   and `--softaudio`
 - Ability to skip menus in shader mode via `--skip_menus`
 - `-o`/`--output` works for subs and audio mode
+  <br><b>Note</b>: You must run `mux` mode in the directory these files are
+  located, as there is no command line argument to specify subs and audio
+  locations.
 - Added `--language=<lang>` which will select the language track to burn
   in (`--softaudio` will disable this). Supported values are ISO 639-2
   three-letter language codes as
   stated [here](https://github.com/mpv-player/mpv/blob/master/DOCS/man/options.rst)
-  .
+  for the option --alang.
 - Use "shader" as the default mode
 - Use 3840x2160 as the default output WxH
 - Use "./shaders" as the default shaders path
@@ -52,6 +54,9 @@ What you need:
 - mkvnixtool (e.g mkvtoolnix on Ubuntu)
 - mediainfo (e.g libmediainfo-dev mediainfo on Ubuntu)
 - A dedicated GPU (no VM) [AMD/NVIDIA/Intel]
+
+You can skip installing the necessary python libs and the initial configuration
+by running `setup.sh`.
 
 **Installing the necessary python libs**
 
@@ -93,7 +98,7 @@ mode argument is also optional as it defaults to shader.
 4. Your file should now be in *video_upscale.mkv*
 5. Done!
 
-### Burning softsubs
+### Burning softsubs/softaudio
 
 1. Extract the audio and/or subtitles from the original file
 
@@ -191,6 +196,9 @@ Input - 1080p - 45Mbps bitrate:
 Output - 4K - 180Mbps bitrate - NVENC H264 Medium - Shaders mode B+B:
 
 ![2160p](../media/example-upscaled.png?raw=true)
+
+Upscaling this movie from 1080p to 4K with a constant bitrate of ~45Mbps using
+NVENC H264 Fast (Shaders mode B+B) took roughly 2hrs 50 minutes.
 
 ## TODO
 
