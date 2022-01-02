@@ -25,6 +25,7 @@ changes. The differences between Anime4K-Encode-4.0.1 and this repository are:
 
 - Cleaned up code
 - Re-added NVENC support
+- Add AMD GPU encoding support (completely untested)
 - Re-added 10-bit toggling support
 - Removed official support for videos with a resolution lower than FHD
 - Ability to choose to manually mux subtitles and audio via `--softsubs`
@@ -110,6 +111,38 @@ typing**:
 python3 Anime4K.py --help
 ```
 
+### GPU Encoding
+
+#### NVENC
+
+NVENC support has been re-added as Ampere NVENC is pretty good in my experience
+with an RTX 3090. I would not recommend using this on 10-series cards or older.
+
+Requirements:
+
+- Latest NVIDIA driver
+- Type `ffmpeg -help` and ensure ffmpeg has been built with `--enable-nvenc`.
+  If not, manually compile ffmpeg
+  with [these]((https://docs.nvidia.com/video-technologies/video-codec-sdk/ffmpeg-with-nvidia-gpu/#compiling-for-linux))
+  instructions
+- May
+  need [cuda](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#verify-you-have-cuda-enabled-system)
+  installed
+
+I had some issues getting NVENC working initially so if this doesn't work for
+you, you may need to tinker with a bunch of different packages.
+
+#### AMD GPUs
+
+I've added support for AMD's "Advanced Media Framework", but I've heard the
+quality is quite bad using this. I do not know how this encoder works nor have
+I tested it, so the code implementation is based on online (lack of)
+documentation. Feel free to raise an Issue ticket on GitHub if there are
+errors, I do own an AMD RX 6900XT so I can attempt to reproduce it.
+
+[Here's](https://gist.github.com/Brainiarc7/95c9338a737aa36d9bb2931bed379219) a
+Gist I found related to setting ffmpeg up to support it.
+
 ## **[Optional]** Encoding ffmpeg progressbar
 
 To get an overview of your current encoding of ffmpeg, you may install
@@ -131,9 +164,6 @@ every user:
   C+A > B+B > A+A.
 - The encoding preset doesn't noticeably affect the encoding speed (only tested
   from fastest to medium)
-
-NVENC support has been re-added as Ampere NVENC is pretty good in my experience
-with an RTX 3090. I would not recommend using this on 10-series cards or older.
 
 The best way to use the shaders is in real time, its intended purpose. The
 purpose of this program is for those that can't run the HQ version of the

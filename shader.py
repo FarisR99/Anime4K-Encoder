@@ -193,7 +193,7 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
 
     if skip_menus['encoder'] is not None:
         encoder = skip_menus['encoder']
-        if encoder != 'cpu' and encoder != 'nvenc':
+        if encoder != 'cpu' and encoder != 'nvenc' and encoder != 'amf':
             print("Unsupported encoder: {0}".format(encoder))
             sys.exit(-2)
     if skip_menus['codec'] is not None:
@@ -214,8 +214,10 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
             [
                 "CPU X264 (Medium Quality/Size ratio, Fast)",
                 "CPU X265 (High Quality/Size ratio, Slow)",
-                "GPU H264 NVENC",
-                "GPU HEVC NVENC"
+                "NVIDIA GPU H264 (NVENC)",
+                "NVIDIA GPU HEVC (NVENC)",
+                "AMD GPU H264 (AMF)",
+                "AMD GPU HEVC (AMF)"
             ],
             title="Choose Video Codec:"
         )
@@ -232,6 +234,12 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
         elif cg_choice == 3:
             codec = "hevc"
             encoder = "nvenc"
+        elif cg_choice == 4:
+            codec = "h264"
+            encoder = "amf"
+        elif cg_choice == 5:
+            codec = "hevc"
+            encoder = "amf"
         else:
             print("Cancel")
             sys.exit(-2)
@@ -254,7 +262,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
 
     Args:
         codec: h264/hevc
-        encoder: cpu/nvenc
+        encoder: cpu/nvenc/amf
         fn: input media path
         width: output width
         height: output height
@@ -272,26 +280,25 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
         format = "yuv420p10le"
     else:
         format = "yuv420p"
+    # AMD GPU Encoding only supports "vaapi_vld"
+    # I can't seem to find what this actually is.
+    if encoder == "amf":
+        format = "vaapi_vld"
 
     # Open shaders menu
     str_shaders = menu_fhd_shaders(shader_path, skip_menus)
     clear()
 
     # Select Codec Presets
-    if encoder == "cpu":
-        codec_presets = [
-            "ultrafast", "veryfast", "fast", "medium", "slow", "veryslow"
-        ]
-    elif encoder == "nvenc":
-        codec_presets = ["fast", "medium", "slow", "lossless"]
-    else:
-        print("ERROR: Unknown encoder: {0}".format(encoder))
-        sys.exit(-2)
-
-    codec_preset = codec_presets[
-        TerminalMenu(codec_presets,
-                     title="Choose Encoder Preset:").show()
-    ]
+    if encoder == "cpu" or encoder == "nvenc":
+        if encoder == "cpu":
+            codec_presets = [
+                "ultrafast", "veryfast", "fast", "medium", "slow", "veryslow"
+            ]
+        elif encoder == "nvenc":
+            codec_presets = ["fast", "medium", "slow", "lossless"]
+        codec_preset = codec_presets[
+            TerminalMenu(codec_presets, title="Choose Encoder Preset:").show()]
 
     comp_level = ""
     if encoder == "cpu":
@@ -307,7 +314,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
             )
             if comp_level == "" or comp_level is None:
                 comp_level = "23"
-    elif encoder == "nvenc":
+    elif encoder == "nvenc" or encoder == "amf":
         if skip_menus['qp'] is not None:
             qp = int(skip_menus['qp'])
             if 0 <= qp <= 51:
@@ -331,6 +338,8 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
     elif encoder == "nvenc":
         print("Encoding with preset: {0} qp={1}".format(codec_preset,
                                                         comp_level))
+    elif encoder == "amf":
+        print("Encoding with preset: qp={0}".format(comp_level))
     print("Start time: " + current_date())
     import time
     time.sleep(3)
@@ -383,6 +392,19 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
         encoding_args.append(
             '--ovcopts=rc=constqp,preset=' + codec_preset + ',profile='
             + profile + ',level=5.1,rc-lookahead=32,qp=' + str(comp_level))
+    elif encoder == "amf":
+        encoding_args.append("--vo=gpu")
+
+        profile = ""
+        if codec == "h264":
+            encoding_args.append("--ovc=h264_vaapi")
+            profile = "high"
+        elif codec == "hevc":
+            encoding_args.append("--ovc=hevc_vaapi")
+            profile = "main10"
+        encoding_args.append(
+            '--ovcopts=rc_mode=cqp,profile=' + profile + ',level=5.1,qp=' + str(
+                comp_level))
 
     if len(files) == 0:
         subprocess.call(encoding_args + ['--o=' + outname, fn])
