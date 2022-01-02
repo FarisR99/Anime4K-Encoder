@@ -29,6 +29,7 @@ changes. The differences between Anime4K-Encode-4.0.1 and this repository are:
 - Re-added 10-bit toggling support
 - Removed official support for videos with a resolution lower than FHD
 - Ability to choose to manually mux subtitles and audio via `--softsubs`
+  and `--softaudio`
 - Ability to skip menus in shader mode via `--skip_menus`
 - `-o`/`--output` works for subs and audio mode
 - Use "shader" as the default mode

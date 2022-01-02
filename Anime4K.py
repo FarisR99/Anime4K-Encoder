@@ -51,7 +51,11 @@ parser.add_argument("-sz", "--split_length", required=False, type=int,
 parser.add_argument("-ss", "--softsubs", required=False,
                     action='store_true',
                     default=False,
-                    help="Set this flag if you want to manually mux subtitles and audio when using shader")
+                    help="Set this flag if you want to manually mux subtitles when using shader")
+parser.add_argument("-sa", "--softaudio", required=False,
+                    action='store_true',
+                    default=False,
+                    help="Set this flag if you want to manually mux audio when using shader")
 parser.add_argument("-sm", "--skip_menus", required=False, type=str2dict,
                     help='''Skip shader/encoding choice menus when using shader
 Example:
@@ -60,7 +64,7 @@ Example:
 parser.add_argument("-l", "--language", required=False, type=str,
                     help=
                     '''Set this to the audio track language for the output video.
-This will not do anything if "--softsubs" is used.''')
+This will not do anything if "--softaudio" is used.''')
 
 args = vars(parser.parse_args())
 if args['version']:
@@ -86,7 +90,7 @@ if mode == "subtitles":
 # Validate "output" argument
 if mode == "audio" or mode == "subs":
     output = args['output'] or ""
-    if output is not "":
+    if output != "":
         if not os.path.isdir(output):
             print("Output directory {0} does not exist".format(output))
             sys.exit(-2)
@@ -104,7 +108,8 @@ elif mode == "mux":
     mux(fn, output)
 elif mode == "shader":
     shader(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
-           args['language'], args['softsubs'], args['skip_menus'], output)
+           args['language'], args['softsubs'], args['softaudio'],
+           args['skip_menus'], output)
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],

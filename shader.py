@@ -133,13 +133,14 @@ def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
 
 # Core
 
-def remove_audio_and_subs(fn: str, softsubs: bool):
+def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
     """
     Remove audio and optionally subtitles from a file.
 
     Args:
         fn: media file path
-        softsubs: true if audio and subtitles should be removed
+        softsubs: true if subtitles should be removed
+        softaudio: true if audio should be removed
     """
 
     args = [
@@ -149,6 +150,7 @@ def remove_audio_and_subs(fn: str, softsubs: bool):
     ]
     if softsubs:
         args.append("--no-subtitles")
+    if softaudio:
         args.append("--no-audio")
     args.append(fn)
 
@@ -156,7 +158,8 @@ def remove_audio_and_subs(fn: str, softsubs: bool):
 
 
 def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
-           language: str, softsubs: bool, skip_menus: dict, outname: str):
+           language: str, softsubs: bool, softaudio: bool, skip_menus: dict,
+           outname: str):
     """
     Select encoding and start the encoding process.
 
@@ -167,7 +170,8 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
         shader_path: path the shaders are located at
         ten_bit: true if the input media is a 10 bit source
         language: optional desired audio track language
-        softsubs: true if audio and subtitles should be removed
+        softsubs: true if subtitles should be removed
+        softaudio: true if audio should be removed
         skip_menus: menu skipping options passed from command line
         outname: output path
     """
@@ -184,7 +188,7 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
             files.append(os.path.join(file))
     else:
         if fn != "temp.mkv":
-            remove_audio_and_subs(fn, softsubs)
+            remove_audio_and_subs(fn, softsubs, softaudio)
             fn = "temp.mkv"
         clear()
 
@@ -246,7 +250,7 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
             sys.exit(-2)
 
     start_encoding(codec, encoder, fn, width, height, shader_path, ten_bit,
-                   language, softsubs, skip_menus, outname, files)
+                   language, softsubs, softaudio, skip_menus, outname, files)
 
     # Delete temp.mkv
     if os.path.isdir(fn):
@@ -257,7 +261,8 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
 
 def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
                    shader_path: str, ten_bit: bool, language: str,
-                   softsubs: bool, skip_menus: dict, outname: str, files):
+                   softsubs: bool, softaudio: bool, skip_menus: dict,
+                   outname: str, files):
     """
     Start the encoding of input file(s) to the specified encoding using the CPU.
 
@@ -270,7 +275,8 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
         shader_path: path the shaders are located at
         ten_bit: true if the input media is a 10 bit source
         language: optional desired audio track language
-        softsubs: true if audio and subtitles should be removed
+        softsubs: true if subtitles should be removed
+        softaudio: true if audio should be removed
         skip_menus: menu skipping options passed from command line
         outname: output path
         files: list of input media file paths, empty if only one
@@ -424,7 +430,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
     else:
         i = 0
         for f in files:
-            remove_audio_and_subs(f, softsubs)
+            remove_audio_and_subs(f, softsubs, softaudio)
             clear()
             name = f.split("/")
             name = name[len(name) - 1]
