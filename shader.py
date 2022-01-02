@@ -291,14 +291,22 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
 
     # Select Codec Presets
     if encoder == "cpu" or encoder == "nvenc":
+        codec_presets = []
         if encoder == "cpu":
             codec_presets = [
                 "ultrafast", "veryfast", "fast", "medium", "slow", "veryslow"
             ]
         elif encoder == "nvenc":
             codec_presets = ["fast", "medium", "slow", "lossless"]
-        codec_preset = codec_presets[
-            TerminalMenu(codec_presets, title="Choose Encoder Preset:").show()]
+        codec_preset = None
+        if skip_menus['preset'] is not None:
+            codec_preset = skip_menus['preset']
+            if codec_preset not in codec_presets:
+                codec_preset = None
+        if codec_preset is None:
+            codec_preset = codec_presets[
+                TerminalMenu(codec_presets,
+                             title="Choose Encoder Preset:").show()]
 
     comp_level = ""
     if encoder == "cpu":

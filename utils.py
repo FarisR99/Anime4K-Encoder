@@ -98,7 +98,7 @@ def str2dict(v) -> dict:
     v = str(v)
     dictionary = {}
     for entry in v.split(","):
-        if not entry.__contains__("="):
+        if "=" not in entry:
             raise argparse.ArgumentTypeError(
                 'Invalid entry, must follow key=value')
         entry_split = entry.split("=")
