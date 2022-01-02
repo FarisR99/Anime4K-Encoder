@@ -210,7 +210,7 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
         os.remove(fn)
 
 
-def start_encoding(encoding: str, encoder: str, fn: str, width: int,
+def start_encoding(codec: str, encoder: str, fn: str, width: int,
                    height: int,
                    shader_path: str,
                    ten_bit: bool, softsubs: bool, outname: str,
@@ -219,7 +219,7 @@ def start_encoding(encoding: str, encoder: str, fn: str, width: int,
     Start the encoding of input file(s) to the specified encoding using the CPU.
 
     Args:
-        encoding: h264/hevc
+        codec: h264/hevc
         encoder: cpu/nvenc
         fn: input media path
         width: output width
@@ -243,11 +243,18 @@ def start_encoding(encoding: str, encoder: str, fn: str, width: int,
     clear()
 
     # Select Codec Presets
-    encoder_preset = [
-        "ultrafast", "veryfast", "fast", "medium", "slow", "veryslow"
-    ]
-    codec_preset = encoder_preset[
-        TerminalMenu(encoder_preset,
+    if encoder == "cpu":
+        codec_presets = [
+            "ultrafast", "veryfast", "fast", "medium", "slow", "veryslow"
+        ]
+    elif encoder == "nvenc":
+        codec_presets = ["fast", "medium", "slow", "lossless"]
+    else:
+        print("ERROR: Unknown encoder " + encoder)
+        sys.exit(-2)
+
+    codec_preset = codec_presets[
+        TerminalMenu(codec_presets,
                      title="Choose Encoder Preset:").show()
     ]
 
@@ -264,9 +271,6 @@ def start_encoding(encoding: str, encoder: str, fn: str, width: int,
         )
         if comp_level == "" or comp_level is None:
             comp_level = "24"
-    else:
-        print("ERROR: Unknown encoder " + encoder)
-        sys.exit(-2)
 
     # Print Info
     print("File: " + fn)
@@ -304,12 +308,12 @@ def start_encoding(encoding: str, encoder: str, fn: str, width: int,
         if len(files) == 0:
             bf = 6
 
-        if encoding == "h264":
+        if codec == "h264":
             encoding_args.append("--ovc=libx264")
-        elif encoding == "hevc":
+        elif codec == "hevc":
             encoding_args.append("--ovc=libx265")
         else:
-            print("ERROR: Unknown encoding " + encoding)
+            print("ERROR: Unknown encoding " + codec)
             sys.exit(-2)
 
         encoding_args.append(
@@ -318,19 +322,16 @@ def start_encoding(encoding: str, encoder: str, fn: str, width: int,
     elif encoder == "nvenc":
         encoding_args.append("--vo=gpu")
 
-        if encoding == "h264":
+        profile = ""
+        if codec == "h264":
             encoding_args.append("--ovc=h264_nvenc")
-            encoding_args.append(
-                '--ovcopts=rc=constqp,preset=' + codec_preset + ',profile=high,level=5.1,rc-lookahead=32,qp=' + str(
-                    comp_level))
-        elif encoding == "hevc":
+            profile = "high"
+        elif codec == "hevc":
             encoding_args.append("--ovc=hevc_nvenc")
-            encoding_args.append(
-                '--ovcopts=rc=constqp,preset=' + codec_preset + ',profile=main10,level=5.1,rc-lookahead=32,qp=' + str(
-                    comp_level))
-        else:
-            print("ERROR: Unknown encoding " + encoding)
-            sys.exit(-2)
+            profile = "main10"
+        encoding_args.append(
+            '--ovcopts=rc=constqp,preset=' + codec_preset + ',profile='
+            + profile + ',level=5.1,rc-lookahead=32,qp=' + str(comp_level))
 
     if len(files) == 0:
         subprocess.call(encoding_args + ['--o=' + outname, fn])
