@@ -25,13 +25,18 @@ changes. The differences between Anime4K-Encode-4.0.1 and this repository are:
 
 - Cleaned up code
 - Re-added NVENC support
-- Add AMD GPU encoding support (completely untested)
+- Added AMD GPU encoding support (completely untested)
 - Re-added 10-bit toggling support
 - Removed official support for videos with a resolution lower than FHD
 - Ability to choose to manually mux subtitles and audio via `--softsubs`
   and `--softaudio`
 - Ability to skip menus in shader mode via `--skip_menus`
 - `-o`/`--output` works for subs and audio mode
+- Added `--language=<lang>` which will select the language track to burn
+  in (`--softaudio` will disable this). Supported values are ISO 639-2
+  three-letter language codes as
+  stated [here](https://github.com/mpv-player/mpv/blob/master/DOCS/man/options.rst)
+  .
 - Use "shader" as the default mode
 - Use 3840x2160 as the default output WxH
 - Use "./shaders" as the default shaders path
