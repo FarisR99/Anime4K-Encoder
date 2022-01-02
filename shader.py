@@ -14,7 +14,7 @@ from utils import clear
 
 def menu_fhd_shaders(shader_path: str) -> str:
     """
-    Select a shader
+    Select a shader for FHD or higher resolution videos.
 
     Args:
         shader_path: path the shaders are located at
@@ -32,7 +32,7 @@ def menu_fhd_shaders(shader_path: str) -> str:
             "Mode B+B (RECOMMENDED. High Quality, Minor Artifacts)",
             "Mode C+A (Low Quality, Minor Artifacts)"
         ],
-        title="Please refer to the Anime4k Wiki for more info\nand try the shaders on mpv beforehand to know what's best for you.\nChoose Shader Preset:"
+        title="Please refer to the Anime4k Wiki for more info and try the\n shaders on mpv beforehand to know what's best for you.\nChoose Shader Preset:"
     )
     mode_choice = mode_menu.show()
 
@@ -182,7 +182,7 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
             "X264 (Medium Quality/Size ratio, Fast)",
             "X265 (High Quality/Size ratio, Slow)"
         ],
-        title="Choose your video codec."
+        title="Choose Video Codec:"
     )
     cg_choice = cg_menu.show()
     if cg_choice == 0:
@@ -228,16 +228,8 @@ def cpu_shader(encoding: str, fn: str, width: int, height: int,
     else:
         format = "yuv420p"
 
-    # Detect width and height of input video.
-    if len(files) == 0:
-        _m = MediaInfo.parse(fn)
-    else:
-        _m = MediaInfo.parse(files[0])
-    track_width = -1
-    for t in _m.tracks:
-        if t.track_type == 'Video':
-            track_width = t.width
-            str_shaders = menu_fhd_shaders(shader_path)
+    # Open shaders menu
+    str_shaders = menu_fhd_shaders(shader_path)
     clear()
 
     # Select Codec Presets
@@ -246,7 +238,7 @@ def cpu_shader(encoding: str, fn: str, width: int, height: int,
     ]
     codec_preset = encoder_preset[
         TerminalMenu(encoder_preset,
-                     title="Choose your encoder preset:").show()
+                     title="Choose Encoder Preset:").show()
     ]
 
     crf = input(
