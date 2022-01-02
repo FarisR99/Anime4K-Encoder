@@ -93,6 +93,8 @@ def str2bool(v) -> bool:
 
 
 def str2dict(v) -> dict:
+    if v is None:
+        return {}
     if isinstance(v, dict):
         return v
     v = str(v)

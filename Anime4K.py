@@ -109,7 +109,7 @@ elif mode == "mux":
 elif mode == "shader":
     shader(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
            args['language'], args['softsubs'], args['softaudio'],
-           args['skip_menus'], output)
+           args['skip_menus'] or {}, output)
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],
