@@ -7,7 +7,7 @@ from extract_subs import extract_subs
 from mux import mux
 from shader import shader
 from splitter import split_by_seconds, get_video_length
-from utils import __current_version__, is_tool, credz
+from utils import __current_version__, is_tool, credz, str2dict
 
 credz()
 
@@ -25,7 +25,8 @@ if not is_tool("mpv"):
 
 # Parse arguments
 parser = argparse.ArgumentParser(
-    description='Upscales animes to 4K automagically using Anime4K shaders.')
+    description='Upscales animes to 4K automagically using Anime4K shaders.',
+    formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument("-v", "--version", required=False,
                     action='store_true',
                     help="Print the current version of Anime4K-Encoder")
@@ -33,9 +34,9 @@ parser.add_argument("-m", "--mode", required=False,
                     default="shader",
                     help="Mode: choose from audio, subs, shader, or mux, split")
 parser.add_argument("-ew", "--width", required=False, type=int, default=3840,
-                    help="desired width when applying shader")
+                    help="Desired width when applying shader")
 parser.add_argument("-eh", "--height", required=False, type=int, default=2160,
-                    help="desired height when applying shader")
+                    help="Desired height when applying shader")
 parser.add_argument("-sd", "--shader_dir", required=False, type=str,
                     default="./shaders",
                     help="Path to shader folder")
@@ -51,6 +52,13 @@ parser.add_argument("-ss", "--softsubs", required=False,
                     action='store_true',
                     default=False,
                     help="Set this flag if you want to manually mux subtitles and audio when using shader")
+
+help_skip_menus = '''Skip shader/encoding choice menus when using shader
+Example:
+ --skip_menus="shader=4,encoder=cpu,codec=h264,crf=23"
+ --skip_menus="shader=4,encoder=nvenc,codec=hevc,qp=24"'''
+parser.add_argument("-sm", "--skip_menus", required=False, type=str2dict,
+                    help=help_skip_menus)
 
 args = vars(parser.parse_args())
 if args['version']:
@@ -79,7 +87,7 @@ elif mode == "mux":
     mux(fn, outname)
 elif mode == "shader":
     shader(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
-           args['softsubs'], outname)
+           args['softsubs'], args['skip_menus'], outname)
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],

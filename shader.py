@@ -11,33 +11,37 @@ from utils import current_date, clear
 
 # Menus
 
-def menu_fhd_shaders(shader_path: str) -> str:
+def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
     """
     Select a shader for FHD or higher resolution videos.
 
     Args:
         shader_path: path the shaders are located at
+        skip_menus: menu skipping options passed from command line
 
     Returns:
         Shader string with selected shaders
     """
 
-    mode_menu = TerminalMenu(
-        [
-            "Mode A (High Quality, Medium Artifacts)",
-            "Mode B (Medium Quality, Minor Artifacts)",
-            "Mode C (Unnoticeable Quality Improvements)",
-            "Mode A+A (Higher Quality, Might Oversharpen)",
-            "Mode B+B (RECOMMENDED. High Quality, Minor Artifacts)",
-            "Mode C+A (Low Quality, Minor Artifacts)"
-        ],
-        title="Please refer to the Anime4k Wiki for more info and try the\n shaders on mpv beforehand to know what's best for you.\nChoose Shader Preset:"
-    )
-    mode_choice = mode_menu.show()
+    if skip_menus['shader'] is not None:
+        mode_choice = int(skip_menus['shader'])
+    else:
+        mode_menu = TerminalMenu(
+            [
+                "Mode A (High Quality, Medium Artifacts)",
+                "Mode B (Medium Quality, Minor Artifacts)",
+                "Mode C (Unnoticeable Quality Improvements)",
+                "Mode A+A (Higher Quality, Might Oversharpen)",
+                "Mode B+B (RECOMMENDED. High Quality, Minor Artifacts)",
+                "Mode C+A (Low Quality, Minor Artifacts)"
+            ],
+            title="Please refer to the Anime4k Wiki for more info and try the\n shaders on mpv beforehand to know what's best for you.\nChoose Shader Preset:"
+        )
+        mode_choice = mode_menu.show()
 
-    if mode_choice is None:
-        print("Canceling")
-        sys.exit(-1)
+        if mode_choice is None:
+            print("Canceling")
+            sys.exit(-1)
 
     if mode_choice == 0:
         s = os.path.join(shader_path, Clamp_Highlights)
@@ -119,6 +123,9 @@ def menu_fhd_shaders(shader_path: str) -> str:
         s = s + ":"
         s = s + os.path.join(shader_path, Upscale_CNN_x2_M)
         return s
+    else:
+        print("Invalid shader mode choice")
+        sys.exit(-1)
 
 
 # Core
@@ -146,7 +153,7 @@ def remove_audio_and_subs(fn: str, softsubs: bool):
 
 
 def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
-           softsubs: bool, outname: str):
+           softsubs: bool, skip_menus: dict, outname: str):
     """
     Select encoding and start the encoding process.
 
@@ -157,6 +164,7 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
         shader_path: path the shaders are located at
         ten_bit: true if the input media is a 10 bit source
         softsubs: true if audio and subtitles should be removed
+        skip_menus: menu skipping options passed from command line
         outname: output path
     """
 
@@ -177,31 +185,56 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
         clear()
 
     # Select encoder
-    cg_menu = TerminalMenu(
-        [
-            "X264 (Medium Quality/Size ratio, Fast)",
-            "X265 (High Quality/Size ratio, Slow)",
-            "GPU H264 (NVENC)",
-            "GPU HEVC (NVENC)"
-        ],
-        title="Choose Video Codec:"
-    )
-    cg_choice = cg_menu.show()
-    if cg_choice == 0:
-        start_encoding("h264", "cpu", fn, width, height, shader_path, ten_bit,
-                       softsubs, outname, files)
-    elif cg_choice == 1:
-        start_encoding("hevc", "cpu", fn, width, height, shader_path, ten_bit,
-                       softsubs, outname, files)
-    elif cg_choice == 2:
-        start_encoding("h264", "nvenc", fn, width, height, shader_path,
-                       ten_bit, softsubs, outname, files)
-    elif cg_choice == 3:
-        start_encoding("hevc", "nvenc", fn, width, height, shader_path,
-                       ten_bit, softsubs, outname, files)
-    else:
-        print("Cancel")
-        sys.exit(-2)
+    codec = ""
+    encoder = ""
+
+    if skip_menus['encoder'] is not None:
+        encoder = skip_menus['encoder']
+        if encoder != 'cpu' and encoder != 'nvenc':
+            print("Unsupported encoder={0}".format(encoder))
+            sys.exit(-2)
+    if skip_menus['codec'] is not None:
+        codec = skip_menus['codec']
+        if codec == 'x264':
+            codec = 'h264'
+            encoder = 'cpu'
+        elif codec == 'x265':
+            codec = 'hevc'
+            encoder = 'cpu'
+        elif codec == 'h265':
+            codec = 'hevc'
+        if codec != 'h264' and codec != 'hevc':
+            print("Unsupported codec={0}".format(encoder))
+            sys.exit(-2)
+    if codec == "" or encoder == "":
+        cg_menu = TerminalMenu(
+            [
+                "CPU X264 (Medium Quality/Size ratio, Fast)",
+                "CPU X265 (High Quality/Size ratio, Slow)",
+                "GPU H264 NVENC",
+                "GPU HEVC NVENC"
+            ],
+            title="Choose Video Codec:"
+        )
+        cg_choice = cg_menu.show()
+        if cg_choice == 0:
+            codec = "h264"
+            encoder = "cpu"
+        elif cg_choice == 1:
+            codec = "hevc"
+            encoder = "cpu"
+        elif cg_choice == 2:
+            codec = "h264"
+            encoder = "nvenc"
+        elif cg_choice == 3:
+            codec = "hevc"
+            encoder = "nvenc"
+        else:
+            print("Cancel")
+            sys.exit(-2)
+
+    start_encoding(codec, encoder, fn, width, height, shader_path, ten_bit,
+                   softsubs, skip_menus, outname, files)
 
     # Delete temp.mkv
     if os.path.isdir(fn):
@@ -210,11 +243,9 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
         os.remove(fn)
 
 
-def start_encoding(codec: str, encoder: str, fn: str, width: int,
-                   height: int,
-                   shader_path: str,
-                   ten_bit: bool, softsubs: bool, outname: str,
-                   files):
+def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
+                   shader_path: str, ten_bit: bool, softsubs: bool,
+                   skip_menus: dict, outname: str, files):
     """
     Start the encoding of input file(s) to the specified encoding using the CPU.
 
@@ -227,6 +258,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int,
         shader_path: path the shaders are located at
         ten_bit: true if the input media is a 10 bit source
         softsubs: true if audio and subtitles should be removed
+        skip_menus: menu skipping options passed from command line
         outname: output path
         files: list of input media file paths, empty if only one
     """
@@ -239,7 +271,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int,
         format = "yuv420p"
 
     # Open shaders menu
-    str_shaders = menu_fhd_shaders(shader_path)
+    str_shaders = menu_fhd_shaders(shader_path, skip_menus)
     clear()
 
     # Select Codec Presets
@@ -260,26 +292,40 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int,
 
     comp_level = ""
     if encoder == "cpu":
-        comp_level = input(
-            "Insert compression factor (CRF) 0-51\n0 = Lossless | 23 = Default | 51 = Highest compression\n"
-        )
-        if comp_level == "" or comp_level is None:
-            comp_level = "23"
+        if skip_menus['crf'] is not None:
+            crf = int(skip_menus['crf'])
+            if 0 <= crf <= 51:
+                comp_level = str(crf)
+            else:
+                comp_level = "23"
+        else:
+            comp_level = input(
+                "Insert compression factor (CRF) 0-51\n0 = Lossless | 23 = Default | 51 = Highest compression\n"
+            )
+            if comp_level == "" or comp_level is None:
+                comp_level = "23"
     elif encoder == "nvenc":
-        comp_level = input(
-            "Insert Quantization Parameter (QP) 0-51\n0 = Lossless | 24 = Default | 51 = Highest compression\n"
-        )
-        if comp_level == "" or comp_level is None:
-            comp_level = "24"
+        if skip_menus['qp'] is not None:
+            qp = int(skip_menus['qp'])
+            if 0 <= qp <= 51:
+                comp_level = str(qp)
+            else:
+                comp_level = "24"
+        else:
+            comp_level = input(
+                "Insert Quantization Parameter (QP) 0-51\n0 = Lossless | 24 = Default | 51 = Highest compression\n"
+            )
+            if comp_level == "" or comp_level is None:
+                comp_level = "24"
 
     # Print Info
     print("File: " + fn)
     print("Using the following shaders:")
     print(str_shaders)
     if encoder == "cpu":
-        print("Encoding with preset: " + codec_preset + " crf=" + comp_level)
+        print("Encoding with preset: {0} crf={1}".format(codec_preset, comp_level))
     elif encoder == "nvenc":
-        print("Encoding with preset: " + codec_preset + " qp=" + comp_level)
+        print("Encoding with preset: {0} qp={1}".format(codec_preset, comp_level))
     print("Start time: " + current_date())
     import time
     time.sleep(3)
@@ -313,7 +359,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int,
         elif codec == "hevc":
             encoding_args.append("--ovc=libx265")
         else:
-            print("ERROR: Unknown encoding " + codec)
+            print("ERROR: Unknown codec={0}".format(codec))
             sys.exit(-2)
 
         encoding_args.append(

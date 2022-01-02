@@ -90,3 +90,17 @@ def str2bool(v) -> bool:
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+def str2dict(v) -> dict:
+    if isinstance(v, dict):
+        return v
+    v = str(v)
+    dictionary = {}
+    for entry in v.split(","):
+        if not entry.__contains__("="):
+            raise argparse.ArgumentTypeError(
+                'Invalid entry, must follow key=value')
+        entry_split = entry.split("=")
+        dictionary[entry_split[0]] = entry_split[1]
+    return dictionary
