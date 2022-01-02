@@ -4,7 +4,7 @@ import subprocess
 
 from simple_term_menu import TerminalMenu
 
-from utils import is_tool, clear
+from utils import current_date, is_tool, clear
 
 
 def encode_to_hevc(fn: str, out: str):
@@ -50,6 +50,7 @@ def encode_to_hevc(fn: str, out: str):
         for file in glob.glob(os.path.join(fn, "*.mkv")):
             files.append(os.path.join(file))
     if len(files) == 0:
+        print("Encoding start time: " + current_date())
         cmd = [
             binary,
             "-hide_banner",
@@ -80,7 +81,10 @@ def encode_to_hevc(fn: str, out: str):
             out
         ]
         subprocess.call(cmd)
+        print("Encoding end time: " + current_date())
     else:
+        print("Encoding start time: " + current_date())
+        i = 0
         for f in files:
             clear()
             name = f.split("/")
@@ -115,3 +119,7 @@ def encode_to_hevc(fn: str, out: str):
                 os.path.join(out, name)
             ]
             subprocess.call(cmd)
+            print("Encoding end time for file=" + str(
+                i + 1) + ": " + current_date())
+            i = i + 1
+        print("Encoding end time: " + current_date())

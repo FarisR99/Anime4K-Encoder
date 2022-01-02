@@ -2,10 +2,10 @@ import glob
 import os
 import subprocess
 import sys
-from consts import *
-from datetime import datetime
-from pymediainfo import MediaInfo
+
 from simple_term_menu import TerminalMenu
+
+from consts import *
 from utils import current_date, clear
 
 

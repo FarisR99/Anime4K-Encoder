@@ -3,7 +3,6 @@ import os
 import subprocess
 import time
 
-from datetime import datetime
 from pymkv import MKVFile
 from simple_term_menu import TerminalMenu
 
