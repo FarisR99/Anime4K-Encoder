@@ -455,16 +455,18 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
     elif encoder == "nvenc":
         encoding_args.append("--vo=gpu")
 
-        profile = ""
         if codec == "h264":
             encoding_args.append("--ovc=h264_nvenc")
-            profile = "high"
+            encoding_args.append(
+                '--ovcopts=rc=constqp,preset=' + codec_preset +
+                ',profile=high,level=5.1,rc-lookahead=32,qp=' + str(comp_level)
+            )
         elif codec == "hevc":
             encoding_args.append("--ovc=hevc_nvenc")
-            profile = "main10"
-        encoding_args.append(
-            '--ovcopts=rc=constqp,preset=' + codec_preset + ',profile='
-            + profile + ',level=5.1,rc-lookahead=32,qp=' + str(comp_level))
+            encoding_args.append(
+                '--ovcopts=rc=constqp,preset=' + codec_preset +
+                ',profile=main10,rc-lookahead=32,qp=' + str(comp_level)
+            )
     elif encoder == "amf":
         encoding_args.append("--vo=gpu")
 
@@ -476,8 +478,8 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             encoding_args.append("--ovc=hevc_vaapi")
             profile = "main10"
         encoding_args.append(
-            '--ovcopts=rc_mode=cqp,profile=' + profile + ',level=5.1,qp=' + str(
-                comp_level))
+            '--ovcopts=rc_mode=cqp,profile=' + profile + ',level=5.1,qp='
+            + str(comp_level))
 
     if len(files) == 1:
         # No need to remove audio and subs for a single file

@@ -132,6 +132,9 @@ python3 Anime4K.py --help
 
 NVENC support has been re-added as Ampere NVENC is pretty good in my experience
 with an RTX 3090. I would not recommend using this on 10-series cards or older.
+<br/><b>Note</b>: Whilst H264 NVENC will use level 5.1, running mpv/ffmpeg
+using HEVC NVENC throws an error if a level is specified, and therefore the
+default is used. On my system and I'd assume most systems, this is 6.2.
 
 Requirements:
 
