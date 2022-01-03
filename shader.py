@@ -157,14 +157,15 @@ def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
     subprocess.call(args)
 
 
-def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
+def shader(fn: "list[str]", width: int, height: int, shader_path: str,
+           ten_bit: bool,
            language: str, softsubs: bool, softaudio: bool, skip_menus: dict,
            outname: str):
     """
     Select encoding and start the encoding process.
 
     Args:
-        fn: input media path
+        fn: list of input media paths
         width: output width
         height: output height
         shader_path: path the shaders are located at
@@ -177,19 +178,34 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
     """
 
     if not os.path.isdir(shader_path):
-        print("Shaders directory does not exist at: {0}".format(shader_path))
+        print("error: shaders directory does not exist at: {0}".format(
+            shader_path))
         sys.exit(-2)
 
-    # Create temp.mkv if input path is a single file
-    clear()
     files = []
-    if os.path.isdir(fn):
-        for file in glob.glob(os.path.join(fn, "*.mkv")):
+    for file in fn:
+        if os.path.isdir(file):
+            for fileInDir in glob.glob(os.path.join(file, "*.mkv")):
+                files.append(os.path.join(fileInDir))
+            for fileInDir in glob.glob(os.path.join(file, "*.mp4")):
+                files.append(os.path.join(fileInDir))
+        else:
             files.append(os.path.join(file))
+    file_count = len(files)
+    if file_count > 1:
+        if not os.path.isdir(outname):
+            print(
+                "error: output path must be a directory when there are more than one input files")
+            sys.exit(-2)
+        # clear()
+    elif file_count == 0:
+        print("error: no valid input media files found")
+        sys.exit(-2)
     else:
-        if fn != "temp.mkv":
-            remove_audio_and_subs(fn, softsubs, softaudio)
-            fn = "temp.mkv"
+        clear()
+        if os.path.isdir(outname):
+            outname = os.path.join(outname, "out.mkv")
+        remove_audio_and_subs(files[0], softsubs, softaudio)
         clear()
 
     # Select encoder
@@ -249,27 +265,23 @@ def shader(fn: str, width: int, height: int, shader_path: str, ten_bit: bool,
             print("Cancel")
             sys.exit(-2)
 
-    start_encoding(codec, encoder, fn, width, height, shader_path, ten_bit,
+    start_encoding(codec, encoder, width, height, shader_path, ten_bit,
                    language, softsubs, softaudio, skip_menus, outname, files)
 
     # Delete temp.mkv
-    if os.path.isdir(fn):
-        os.remove("temp.mkv")
-    else:
-        os.remove(fn)
+    os.remove("temp.mkv")
 
 
-def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
+def start_encoding(codec: str, encoder: str, width: int, height: int,
                    shader_path: str, ten_bit: bool, language: str,
                    softsubs: bool, softaudio: bool, skip_menus: dict,
-                   outname: str, files):
+                   outname: str, files: "list[str]"):
     """
     Start the encoding of input file(s) to the specified encoding using the CPU.
 
     Args:
         codec: h264/hevc
         encoder: cpu/nvenc/amf
-        fn: input media path
         width: output width
         height: output height
         shader_path: path the shaders are located at
@@ -279,7 +291,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
         softaudio: true if audio should be removed
         skip_menus: menu skipping options passed from command line
         outname: output path
-        files: list of input media file paths, empty if only one
+        files: list of input media file paths
     """
 
     clear()
@@ -345,7 +357,8 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
                 comp_level = "24"
 
     # Print Info
-    print("File: " + fn)
+    files_string = ", ".join(files)
+    print("Files: {0}".format(files_string))
     print("Using the following shaders:")
     print(str_shaders)
     if encoder == "cpu":
@@ -356,10 +369,11 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
                                                         comp_level))
     elif encoder == "amf":
         print("Encoding with preset: qp={0}".format(comp_level))
-    print("Start time: " + current_date())
+    start_time = current_date()
+    print("Start time: " + start_time)
     import time
     time.sleep(3)
-    # clear()
+    clear()
 
     # Encode
     encoding_args = [
@@ -383,7 +397,7 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
     # Arguments specific to the encoding and encoder specified
     if encoder == "cpu":
         bf = 8
-        if len(files) == 0:
+        if len(files) == 1:
             bf = 6
 
         if codec == "h264":
@@ -424,22 +438,34 @@ def start_encoding(codec: str, encoder: str, fn: str, width: int, height: int,
             '--ovcopts=rc_mode=cqp,profile=' + profile + ',level=5.1,qp=' + str(
                 comp_level))
 
-    if len(files) == 0:
-        subprocess.call(encoding_args + ['--o=' + outname, fn])
+    if len(files) == 1:
+        # No need to remove audio and subs for a single file
+        # since it is done prior in the shader function
+        subprocess.call(encoding_args + ['--o=' + outname, "temp.mkv"])
         print("End time: " + current_date())
+        print("Complete!")
     else:
         i = 0
         for f in files:
-            remove_audio_and_subs(f, softsubs, softaudio)
-            clear()
             name = f.split("/")
             name = name[len(name) - 1]
-            subprocess.call(
-                encoding_args + [
-                    '--o=' + os.path.join(outname, name) + outname,
-                    "temp.mkv"])
-            subprocess.call(encoding_args)
+            remove_audio_and_subs(f, softsubs, softaudio)
+            clear()
+            print("Files: {0}".format(files_string))
+            print("Start time: {0}".format(start_time))
+            print("Start time for file={0}: {1}".format(str(i + 1),
+                                                        current_date()))
+
+            raw_name = os.path.splitext(name)[0]
+            subprocess.call(encoding_args + [
+                '--o=' + os.path.join(outname, raw_name + ".mkv"),
+                "temp.mkv"
+            ])
             print("End time for file={0}: {1}".format(str(i + 1),
                                                       current_date()))
+            clear()
             i = i + 1
+        print("Files: {0}".format(files_string))
+        print("Start time: {0}".format(start_time))
         print("End time: {0}".format(current_date()))
+        print("Complete!")
