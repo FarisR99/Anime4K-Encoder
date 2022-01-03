@@ -4,9 +4,9 @@ import sys
 
 from extract_audio import extract_audio
 from extract_subs import extract_subs
+from multi import multi
 from mux import mux
 from shader import shader
-from multi import multi
 from splitter import split_by_seconds, get_video_length
 from utils import __current_version__, is_tool, credz, str2dict
 
@@ -152,7 +152,7 @@ elif mode == "multi":
     if type(fn) is str:
         fn = [fn]
     multi(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
-          args['skip_menus'])
+          args['skip_menus'], output)
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],
