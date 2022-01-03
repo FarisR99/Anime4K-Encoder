@@ -10,13 +10,15 @@ from simple_term_menu import TerminalMenu
 from utils import current_date, language_mapping
 
 
-def extract_audio(fn: str, out_dir: str):
+def extract_audio(fn: str, out_dir: str) -> bool:
     """
     Extract audio from a media file.
 
     Args:
         fn: input media file path
         out_dir: directory where audio files are extracted to
+    Returns:
+        True if the audio tracks were successfully extracted
     """
 
     if out_dir is None:
@@ -24,6 +26,7 @@ def extract_audio(fn: str, out_dir: str):
 
     print("Loading file={0}".format(fn))
     mkv = MKVFile(fn)
+    success = True
 
     # Extract tracks from input media
     print("Audio extraction start time: " + current_date())
@@ -33,8 +36,9 @@ def extract_audio(fn: str, out_dir: str):
             ext = track._track_codec
             lang = language_mapping[track._language]
             id = str(track._track_id)
+            return_code = -1
             try:
-                subprocess.call([
+                return_code = subprocess.call([
                     'mkvextract', 'tracks', fn,
                     id + ':' + out_dir + lang + '.' + ext
                 ])
@@ -45,6 +49,8 @@ def extract_audio(fn: str, out_dir: str):
                     sys.exit(-1)
                 except SystemExit:
                     os._exit(-1)
+            if return_code != 0:
+                success = False
 
     print("Audio extraction end time: " + current_date())
 
@@ -100,3 +106,4 @@ def extract_audio(fn: str, out_dir: str):
                 time.sleep(1)
                 os.remove(f)
             print("Conversion end time: " + current_date())
+    return success

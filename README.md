@@ -42,9 +42,9 @@ changes. The differences between Anime4K-Encode-4.0.1 and this repository are:
   for the option "--alang".
 - Renamed `--file` to `--input` as it supports directories
 - Added support for multiple `--input` arguments
-- Use "shader" as the default mode
-- Use 3840x2160 as the default output WxH
-- Use "./shaders" as the default shaders path
+- Added `-m multi` which will apply mode shaders, audio, subs and mux all at
+  once.
+- Use default values for some arguments
 
 ## Installing / Getting started
 

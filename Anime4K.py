@@ -6,9 +6,14 @@ from extract_audio import extract_audio
 from extract_subs import extract_subs
 from mux import mux
 from shader import shader
+from multi import multi
 from splitter import split_by_seconds, get_video_length
 from utils import __current_version__, is_tool, credz, str2dict
 
+# Constant variables
+MODES_SUPPORTING_MULTI_INPUTS = ["shader", "multi"]
+
+# Print credits
 credz()
 
 # Check for required tools
@@ -32,7 +37,13 @@ parser.add_argument("-v", "--version", required=False,
                     help="Print the current version of Anime4K-Encoder")
 parser.add_argument("-m", "--mode", required=False,
                     default="shader",
-                    help="Mode: choose from audio, subs, shader, or mux, split")
+                    help='''Modes:
+ shader - Apply Anime4K shaders and encode
+ audio - Extract audio tracks from a media file
+ subs - Extract subtitles from a media file
+ mux - Mux/compile a media file with audio files and subtitle files
+ multi - Apply shader with -ss and -sa, audio, subs and mux mode in order
+ split - Split a media file into parts''')
 parser.add_argument("-ew", "--width", required=False, type=int, default=3840,
                     help="Desired width when applying shader")
 parser.add_argument("-eh", "--height", required=False, type=int, default=2160,
@@ -98,12 +109,12 @@ if type(fn) is list:
                 "error: Cannot use multiple inputs with mode={0}".format(mode))
             sys.exit(-2)
         for file in fn:
-            exit_if_missing(file, mode == "shader")
+            exit_if_missing(file, mode in MODES_SUPPORTING_MULTI_INPUTS)
     else:
         fn = fn[0]
-        exit_if_missing(fn, mode == "shader")
+        exit_if_missing(fn, mode in MODES_SUPPORTING_MULTI_INPUTS)
 else:
-    exit_if_missing(fn, mode == "shader")
+    exit_if_missing(fn, mode in MODES_SUPPORTING_MULTI_INPUTS)
 
 if mode == "subtitles":
     mode = "subs"
@@ -137,6 +148,11 @@ elif mode == "shader":
     shader(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
            args['audio_language'], args['softsubs'], args['softaudio'],
            args['skip_menus'] or {}, output)
+elif mode == "multi":
+    if type(fn) is str:
+        fn = [fn]
+    multi(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
+          args['skip_menus'])
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],

@@ -19,13 +19,15 @@ def genExt(codec):
         return None
 
 
-def extract_subs(fn: str, out_dir: str):
+def extract_subs(fn: str, out_dir: str) -> bool:
     """
     Extract subtitles from a media file.
 
     Args:
         fn: input media file path
         out_dir: directory where subtitles are extracted to
+    Returns:
+        True if the subtitles were successfully extracted
     """
 
     if out_dir is None:
@@ -36,6 +38,7 @@ def extract_subs(fn: str, out_dir: str):
 
     print("Subtitle extraction start time: " + current_date())
     tracks = mkv.get_track()
+    success = True
     for track in tracks:
         if track.track_type == 'subtitles':
             ext = genExt(track._track_codec)
@@ -48,8 +51,9 @@ def extract_subs(fn: str, out_dir: str):
             lang = track._language
             id = str(track._track_id)
 
+            return_code = -1
             try:
-                subprocess.call([
+                return_code = subprocess.call([
                     'mkvextract', 'tracks', fn,
                     id + ':' + str(out_dir) + str(lang) + '_' + id + '.' + ext
                 ])
@@ -57,4 +61,7 @@ def extract_subs(fn: str, out_dir: str):
                 print("Cancelled subtitles extraction.")
                 print("Exiting program...")
                 sys.exit(-1)
+            if return_code != 0:
+                success = False
     print("Subtitle extraction end time: " + current_date())
+    return success
