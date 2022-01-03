@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from shutil import which
 
-__current_version__ = '1.0.1'
+__current_version__ = '1.1.0'
 
 
 def credz():

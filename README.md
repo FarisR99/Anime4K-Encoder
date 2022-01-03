@@ -27,6 +27,7 @@ changes. The differences between Anime4K-Encode-4.0.1 and this repository are:
 - Added AMD GPU encoding support (completely untested)
 - Re-added 10-bit toggling support
 - Removed official support for videos with a resolution lower than FHD
+- Added support for MP4 files
 - Ability to choose to manually mux subtitles and audio via `--softsubs`
   and `--softaudio`
 - Ability to skip menus in shader mode via `--skip_menus`
@@ -34,11 +35,13 @@ changes. The differences between Anime4K-Encode-4.0.1 and this repository are:
   <br><b>Note</b>: You must run `mux` mode in the directory these files are
   located, as there is no command line argument to specify subs and audio
   locations.
-- Added `-al=<lang>`/`--audio_language=<lang>` which will select the language track to burn
-  in (`--softaudio` will disable this). Supported values are ISO 639-2
-  three-letter language codes as
+- Added `-al=<lang>`/`--audio_language=<lang>` which will select the language
+  track to burn in (`--softaudio` will disable this). Supported values are ISO
+  639-2 three-letter language codes as
   stated [here](https://github.com/mpv-player/mpv/blob/master/DOCS/man/options.rst)
-  for the option --alang.
+  for the option "--alang".
+- Renamed `--file` to `--input` as it supports directories
+- Added support for multiple `--input` arguments
 - Use "shader" as the default mode
 - Use 3840x2160 as the default output WxH
 - Use "./shaders" as the default shaders path
@@ -129,6 +132,9 @@ python3 Anime4K.py --help
 
 NVENC support has been re-added as Ampere NVENC is pretty good in my experience
 with an RTX 3090. I would not recommend using this on 10-series cards or older.
+<br/><b>Note</b>: Whilst H264 NVENC will use level 5.1, running mpv/ffmpeg
+using HEVC NVENC throws an error if a level is specified, and therefore the
+default is used. On my system and I'd assume most systems, this is 6.2.
 
 Requirements:
 

@@ -1,4 +1,5 @@
 import subprocess
+import sys
 
 from pymkv import MKVFile
 
@@ -39,12 +40,21 @@ def extract_subs(fn: str, out_dir: str):
         if track.track_type == 'subtitles':
             ext = genExt(track._track_codec)
             if ext is None:
-                print("WARNING: Skipping unknown subtitle with id={0}, codec={1}".format(str(track._track_id), str(track._track_codec or "Unknown")))
+                print(
+                    "WARNING: Skipping unknown subtitle with id={0}, codec={1}".format(
+                        str(track._track_id),
+                        str(track._track_codec or "Unknown")))
                 continue
             lang = track._language
             id = str(track._track_id)
 
-            subprocess.call(['mkvextract', 'tracks', fn,
-                             id + ':' + str(out_dir) + str(
-                                 lang) + '_' + id + '.' + ext])
+            try:
+                subprocess.call([
+                    'mkvextract', 'tracks', fn,
+                    id + ':' + str(out_dir) + str(lang) + '_' + id + '.' + ext
+                ])
+            except KeyboardInterrupt:
+                print("Cancelled subtitles extraction.")
+                print("Exiting program...")
+                sys.exit(-1)
     print("Subtitle extraction end time: " + current_date())

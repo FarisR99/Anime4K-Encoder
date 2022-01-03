@@ -43,7 +43,8 @@ parser.add_argument("-sd", "--shader_dir", required=False, type=str,
 parser.add_argument("-bit", "--bit", required=False,
                     action='store_true',
                     help="Set this flag if the source file is 10bit when using shader")
-parser.add_argument("-i", "--file", required=False, help="The input file")
+parser.add_argument("-i", "--input", required=False, action='append',
+                    help="The input file/directory")
 parser.add_argument("-o", "--output", required=False,
                     help="Output filename/directory")
 parser.add_argument("-sz", "--split_length", required=False, type=int,
@@ -71,18 +72,38 @@ if args['version']:
     print("Anime4K-Encoder v" + __current_version__)
     sys.exit(1)
 
-# Ensure input path is specified and exists
-fn = args['file']
+
+def exit_if_missing(file_path: str, allow_dir: bool = True):
+    if not os.path.isdir(file_path):
+        if not os.path.isfile(file_path):
+            print("error: input={0} does not exist".format(file_path))
+            sys.exit(-2)
+    elif allow_dir is False:
+        print("error: cannot use a directory ({0}) as an input for this mode"
+              .format(file_path))
+
+
+fn = args['input']
+mode = str(args['mode']).lower()
+
+# Validate "input" argument
 if fn is None:
     parser.print_help()
-    print("error: the following arguments are required: -i/--file")
+    print("error: the following arguments are required: -i/--input")
     sys.exit(-2)
-if not os.path.isdir(fn):
-    if not os.path.isfile(fn):
-        print("{0} does not exist".format(fn))
-        sys.exit(-2)
-
-mode = args['mode']
+if type(fn) is list:
+    if len(fn) != 1:
+        if mode != "shader":
+            print(
+                "error: Cannot use multiple inputs with mode={0}".format(mode))
+            sys.exit(-2)
+        for file in fn:
+            exit_if_missing(file, mode == "shader")
+    else:
+        fn = fn[0]
+        exit_if_missing(fn, mode == "shader")
+else:
+    exit_if_missing(fn, mode == "shader")
 
 if mode == "subtitles":
     mode = "subs"
@@ -111,6 +132,8 @@ elif mode == "subs":
 elif mode == "mux":
     mux(fn, output)
 elif mode == "shader":
+    if type(fn) is str:
+        fn = [fn]
     shader(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
            args['audio_language'], args['softsubs'], args['softaudio'],
            args['skip_menus'] or {}, output)
