@@ -69,6 +69,7 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
             print("Skipping...")
             failed_inputs.append(input_path)
             continue
+        os.remove(output_path)
         print("Successfully compiled file={0}".format(new_output))
     print()
     if len(failed_inputs) == 0:
