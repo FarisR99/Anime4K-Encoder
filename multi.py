@@ -93,6 +93,8 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
             failed_inputs.append(input_path)
             continue
         os.remove(output_path)
+        os.rename(new_output, output_path)
+        new_output = output_path
         print("Successfully compiled file={0}".format(new_output))
         successful_inputs[input_path] = new_output
     print()
