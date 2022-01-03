@@ -89,7 +89,9 @@ if mode == "subtitles":
 
 # Validate "output" argument
 if mode == "audio" or mode == "subs":
-    output = args['output'] or ""
+    output = args['output']
+    if output is None:
+        output = ""
     if output != "":
         if not os.path.isdir(output):
             print("Output directory {0} does not exist".format(output))
@@ -99,6 +101,8 @@ if mode == "audio" or mode == "subs":
                 output = output + "/"
 elif mode == "mux" or mode == "shader":
     output = args['output'] or "out.mkv"
+elif mode == "split":
+    output = args['output']
 
 if mode == "audio":
     extract_audio(fn, output)
@@ -113,6 +117,6 @@ elif mode == "shader":
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],
-                     video_length=length, split_dir=args['output'])
+                     video_length=length, split_dir=output)
 else:
     print("Unknown option: {0}".format(mode))
