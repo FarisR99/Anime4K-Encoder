@@ -12,6 +12,8 @@ def genExt(codec):
         return "ass"
     elif "SRT" in codec or "SubRip" in codec:
         return "srt"
+    elif "VobSub" in codec:
+        return "idx"
     else:
         return None
 
