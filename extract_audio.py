@@ -1,6 +1,7 @@
 import glob
 import os
 import subprocess
+import sys
 import time
 
 from pymkv import MKVFile
@@ -32,9 +33,19 @@ def extract_audio(fn: str, out_dir: str):
             ext = track._track_codec
             lang = language_mapping[track._language]
             id = str(track._track_id)
-            subprocess.call(
-                ['mkvextract', 'tracks', fn, id + ':' + out_dir + lang + '.' + ext]
-            )
+            try:
+                subprocess.call([
+                    'mkvextract', 'tracks', fn,
+                    id + ':' + out_dir + lang + '.' + ext
+                ])
+            except KeyboardInterrupt:
+                print("Cancelled track extraction.")
+                print("Exiting program...")
+                try:
+                    sys.exit(-1)
+                except SystemExit:
+                    os._exit(-1)
+
     print("Audio extraction end time: " + current_date())
 
     flacs = []
@@ -64,19 +75,28 @@ def extract_audio(fn: str, out_dir: str):
                     br = "192K"
                 fn_base = f.split(".")[0]
                 out_audio = fn_base + ".Opus"
-                subprocess.call([
-                    "ffmpeg",
-                    "-hide_banner",
-                    "-i",
-                    f,
-                    "-c:a",
-                    "libopus",
-                    "-b:a",
-                    br,
-                    "-vbr",
-                    "on",
-                    out_audio
-                ])
+                try:
+                    subprocess.call([
+                        "ffmpeg",
+                        "-hide_banner",
+                        "-i",
+                        f,
+                        "-c:a",
+                        "libopus",
+                        "-b:a",
+                        br,
+                        "-vbr",
+                        "on",
+                        out_audio
+                    ])
+                except KeyboardInterrupt:
+                    print("Cancelled conversion.")
+                    os.remove(out_audio)
+                    print("Exiting program...")
+                    try:
+                        sys.exit(-1)
+                    except SystemExit:
+                        os._exit(-1)
                 time.sleep(1)
                 os.remove(f)
             print("Conversion end time: " + current_date())

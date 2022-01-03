@@ -1,6 +1,7 @@
 import glob
 import os
 import subprocess
+import sys
 
 from simple_term_menu import TerminalMenu
 
@@ -80,7 +81,14 @@ def encode_to_hevc(fn: str, out: str):
             'bt709',
             out
         ]
-        subprocess.call(cmd)
+        try:
+            subprocess.call(cmd)
+        except KeyboardInterrupt:
+            print("Cancelled encoding, exiting program...")
+            try:
+                sys.exit(-1)
+            except SystemExit:
+                os._exit(-1)
         print("Encoding end time: " + current_date())
     else:
         print("Encoding start time: " + current_date())
@@ -118,7 +126,15 @@ def encode_to_hevc(fn: str, out: str):
                 'bt709',
                 os.path.join(out, name)
             ]
-            subprocess.call(cmd)
+            try:
+                subprocess.call(cmd)
+            except KeyboardInterrupt:
+                print("Cancelled encoding for file={0}".format(f))
+                print("Exiting program...")
+                try:
+                    sys.exit(-1)
+                except SystemExit:
+                    os._exit(-1)
             print("Encoding end time for file=" + str(
                 i + 1) + ": " + current_date())
             i = i + 1

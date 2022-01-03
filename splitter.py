@@ -4,6 +4,7 @@ import math
 import os
 import shlex
 import subprocess
+import sys
 
 
 def split_by_manifest(filename, manifest, vcodec="copy", acodec="copy",
@@ -131,5 +132,11 @@ def split_by_seconds(filename: str, split_length: int, vcodec: str = "copy",
         split_args += ["-ss", str(split_start), "-t", str(split_length),
                        filebase + "-" + str(n + 1) + "-of-" + str(
                            split_count) + "." + fileext]
-        print("About to run: " + " ".join(split_cmd + split_args))
-        subprocess.check_output(split_cmd + split_args)
+        try:
+            subprocess.check_output(split_cmd + split_args)
+        except KeyboardInterrupt:
+            print("Splitting cancelled, exiting program...")
+            try:
+                sys.exit(-1)
+            except SystemExit:
+                os._exit(-1)

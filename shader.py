@@ -154,7 +154,16 @@ def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
         args.append("--no-audio")
     args.append(fn)
 
-    subprocess.call(args)
+    try:
+        subprocess.call(args)
+    except KeyboardInterrupt:
+        print("File processing cancelled for file={0}".format(fn))
+        cleanup()
+        print("Exiting program...")
+        try:
+            sys.exit(-1)
+        except SystemExit:
+            os._exit(-1)
 
 
 def cleanup():
@@ -277,7 +286,15 @@ def shader(fn: "list[str]", width: int, height: int, shader_path: str,
                    language, softsubs, softaudio, skip_menus, outname, files)
 
 
-def handle_cancellation(file_name: str, start_time: str):
+def handle_encoding_cancellation(file_name: str, start_time: str):
+    """
+    Handle cancellation during encoding
+
+    Args:
+        file_name: The current file being encoded
+        start_time: The time the first file began encoding
+    """
+
     print("Cancelled encoding of file={0}".format(file_name))
     print("Start time: {0}".format(start_time))
     print("End time: " + current_date())
@@ -468,7 +485,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 encoding_args + ['--o=' + outname, "temp.mkv"]
             )
         except KeyboardInterrupt:
-            handle_cancellation(files[0], start_time)
+            handle_encoding_cancellation(files[0], start_time)
         print("End time: " + current_date())
         print()
         if return_code == 0:
@@ -498,7 +515,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                     "temp.mkv"
                 ])
             except KeyboardInterrupt:
-                handle_cancellation(f, start_time)
+                handle_encoding_cancellation(f, start_time)
             if return_code != 0:
                 failed_files.append(f)
             print("End time for file={0}: {1}".format(str(i + 1),

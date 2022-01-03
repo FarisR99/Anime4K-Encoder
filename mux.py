@@ -1,5 +1,6 @@
 import glob
 import os
+import sys
 
 from pymkv import MKVFile, MKVTrack
 
@@ -58,6 +59,23 @@ def delete_by_extension(ext: str):
         os.remove(file)
 
 
+def clean_up():
+    delete_by_extension("AAC")
+    delete_by_extension("MP3")
+    delete_by_extension("DTS")
+    delete_by_extension("Opus")
+    delete_by_extension("FLAC")
+    delete_by_extension("TrueHD Atmos")
+    delete_by_extension("AC-3")
+    delete_by_extension("DTS-HD Master Audio")
+
+    delete_by_extension("sup")
+    delete_by_extension("srt")
+    delete_by_extension("ass")
+    delete_by_extension("idx")
+    delete_by_extension("sub")
+
+
 def mux(fn: str, out: str):
     """
     Start the muxing process
@@ -84,24 +102,18 @@ def mux(fn: str, out: str):
     addSubs(mkv, "idx")
 
     print("Mux start time: " + current_date())
-    mkv.mux(out)
+    try:
+        mkv.mux(out)
+    except KeyboardInterrupt:
+        print("Cancelled process, exiting program...")
+        os.remove(out)
+        try:
+            sys.exit(-1)
+        except SystemExit:
+            os._exit(-1)
     print("Mux end time: " + current_date())
 
     # Clean up
     print("\nCleaning...")
-
-    delete_by_extension("AAC")
-    delete_by_extension("MP3")
-    delete_by_extension("DTS")
-    delete_by_extension("Opus")
-    delete_by_extension("FLAC")
-    delete_by_extension("TrueHD Atmos")
-    delete_by_extension("AC-3")
-    delete_by_extension("DTS-HD Master Audio")
-
-    delete_by_extension("sup")
-    delete_by_extension("srt")
-    delete_by_extension("ass")
-    delete_by_extension("idx")
-    delete_by_extension("sub")
+    clean_up()
     print("Cleaned!")
