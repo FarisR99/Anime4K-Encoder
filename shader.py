@@ -158,7 +158,7 @@ def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
         subprocess.call(args)
     except KeyboardInterrupt:
         print("File processing cancelled for file={0}".format(fn))
-        cleanup()
+        shader_cleanup()
         print("Exiting program...")
         try:
             sys.exit(-1)
@@ -166,7 +166,7 @@ def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
             os._exit(-1)
 
 
-def cleanup():
+def shader_cleanup():
     """
     Post-encoding cleanup
     """
@@ -301,7 +301,7 @@ def handle_encoding_cancellation(file_name: str, start_time: str):
     print("Cancelled encoding of file={0}".format(file_name))
     print("Start time: {0}".format(start_time))
     print("End time: " + current_date())
-    cleanup()
+    shader_cleanup()
     print("Exiting program...")
     try:
         sys.exit(-1)
@@ -499,6 +499,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
         except KeyboardInterrupt:
             handle_encoding_cancellation(files[0], start_time)
         print("End time: " + current_date())
+        os.remove("temp.mkv")
         print()
         if return_code == 0:
             successful_encodes[files[0]] = outname
@@ -536,6 +537,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 successful_encodes[f] = output_path
             print("End time for file={0}: {1}".format(str(i + 1),
                                                       current_date()))
+            os.remove("temp.mkv")
             clear()
             i = i + 1
         print("Files: {0}".format(files_string))
