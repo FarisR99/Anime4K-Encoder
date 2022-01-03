@@ -53,9 +53,9 @@ parser.add_argument("-sd", "--shader_dir", required=False, type=str,
                     help="Path to shader folder")
 parser.add_argument("-bit", "--bit", required=False,
                     action='store_true',
-                    help="Set this flag if the source file is 10bit when using shader")
+                    help="Set this flag if the source file is 10bit when using mode shader")
 parser.add_argument("-i", "--input", required=False, action='append',
-                    help="The input file/directory")
+                    help="Input file/directory")
 parser.add_argument("-o", "--output", required=False,
                     help="Output filename/directory")
 parser.add_argument("-sz", "--split_length", required=False, type=int,
@@ -63,13 +63,13 @@ parser.add_argument("-sz", "--split_length", required=False, type=int,
 parser.add_argument("-ss", "--softsubs", required=False,
                     action='store_true',
                     default=False,
-                    help="Set this flag if you want to manually mux subtitles when using shader")
+                    help="Set this flag if you want to manually mux subtitles when using mode shader")
 parser.add_argument("-sa", "--softaudio", required=False,
                     action='store_true',
                     default=False,
-                    help="Set this flag if you want to manually mux audio when using shader")
+                    help="Set this flag if you want to manually mux audio when using mode shader")
 parser.add_argument("-sm", "--skip_menus", required=False, type=str2dict,
-                    help='''Skip shader/encoding choice menus when using shader
+                    help='''Skip shader/encoding choice menus when using mode shader
 Example:
  --skip_menus="shader=4,encoder=cpu,codec=h264,preset=fast,crf=23"
  --skip_menus="shader=4,encoder=nvenc,codec=hevc,preset=fast,qp=24"''')
@@ -77,6 +77,10 @@ parser.add_argument("-al", "--audio_language", required=False, type=str,
                     help=
                     '''Set this to the audio track language for the output video.
 This will not do anything if "--softaudio" is used.''')
+parser.add_argument("--delete_failures", required=False,
+                    action='store_true',
+                    default=False,
+                    help="Set this flag to delete output files that have failed to compile when using mode multi")
 
 args = vars(parser.parse_args())
 if args['version']:
@@ -152,7 +156,7 @@ elif mode == "multi":
     if type(fn) is str:
         fn = [fn]
     multi(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
-          args['skip_menus'], output)
+          args['skip_menus'], args['delete_failures'], output)
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],

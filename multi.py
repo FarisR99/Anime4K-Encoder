@@ -8,7 +8,7 @@ from shader import shader
 
 
 def multi(fn: "list[str]", width: int, height: int, shader_path: str,
-          ten_bit: bool, skip_menus: dict, outname: str):
+          ten_bit: bool, skip_menus: dict, del_failures: bool, outname: str):
     """
     Run mode shader on the input files, then for each file successfully
     encoded with shaders applied, run extract audio and extract subs on
@@ -22,6 +22,7 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
         shader_path: path where the shaders are located
         ten_bit: true if the input file(s) are a 10 bit source
         skip_menus: menu skipping options passed from command line
+        del_failures: true if encoded output files should be deleted on failure
         outname: output path
     Returns:
 
@@ -45,19 +46,30 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
         print()
         print("Starting mode subs for input={0}".format(input_path))
         if not extract_subs(input_path, ""):
-            clean_up()
             print(
                 "Failed to extract subtitles for file={0}".format(input_path)
             )
+            clean_up()
+            if del_failures:
+                print("Deleting encoded file and skipping...")
+                os.remove(output_path)
+            else:
+                print("Skipping...")
             failed_inputs.append(input_path)
             continue
         print()
         print("Starting mode audio for input={0}".format(input_path))
         if not extract_audio(input_path, ""):
-            clean_up()
             print(
                 "Failed to extract audio for file={0}".format(input_path)
             )
+            clean_up()
+            if del_failures:
+                print("Deleting encoded file and skipping...")
+                os.remove(output_path)
+            else:
+                print("Skipping...")
+            clean_up()
             failed_inputs.append(input_path)
             continue
         print()
@@ -70,8 +82,14 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
         except Exception as e:
             print("Failed to mux file={0}".format(output_path))
             print(e)
-            print("Deleting encoded file and skipping...")
-            os.remove(output_path)
+            if os.path.isfile(new_output):
+                print("Deleting compiled file={0}".format(new_output))
+                os.remove(new_output)
+            if del_failures:
+                print("Deleting encoded file and skipping...")
+                os.remove(output_path)
+            else:
+                print("Skipping...")
             failed_inputs.append(input_path)
             continue
         os.remove(output_path)
