@@ -45,7 +45,6 @@ What you need:
 - mpv > 0.32
 - ffmpeg
 - mkvnixtool (e.g mkvtoolnix on Ubuntu)
-- mediainfo (e.g libmediainfo-dev mediainfo on Ubuntu)
 - A dedicated GPU (no VM) [AMD/NVIDIA/Intel]
 
 You can skip installing the necessary python libs and the initial configuration
