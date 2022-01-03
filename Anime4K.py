@@ -131,7 +131,7 @@ if mode == "audio" or mode == "subs":
         else:
             if not output.endswith("/"):
                 output = output + "/"
-elif mode == "mux" or mode == "shader":
+elif mode == "mux" or mode == "shader" or mode == "multi":
     output = args['output'] or "out.mkv"
 elif mode == "split":
     output = args['output']
