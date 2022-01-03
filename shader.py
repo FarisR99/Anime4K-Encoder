@@ -281,7 +281,8 @@ def shader(fn: "list[str]", width: int, height: int, shader_path: str,
             codec = "hevc"
             encoder = "amf"
         else:
-            print("Cancel")
+            print("Cancelled")
+            shader_cleanup()
             sys.exit(-2)
 
     return start_encoding(codec, encoder, width, height, shader_path, ten_bit,
@@ -373,6 +374,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                                                  title="Choose Encoder Preset:").show()
             if selected_codec_preset is None:
                 print("Cancelled")
+                shader_cleanup()
                 sys.exit(-1)
             codec_preset = codec_presets[selected_codec_preset]
 
@@ -458,6 +460,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             encoding_args.append("--ovc=libx265")
         else:
             print("ERROR: Unknown codec: {0}".format(codec))
+            shader_cleanup()
             sys.exit(-2)
 
         encoding_args.append(
