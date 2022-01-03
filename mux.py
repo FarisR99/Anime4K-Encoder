@@ -103,4 +103,5 @@ def mux(fn: str, out: str):
     delete_by_extension("srt")
     delete_by_extension("ass")
     delete_by_extension("idx")
+    delete_by_extension("sub")
     print("Cleaned!")
