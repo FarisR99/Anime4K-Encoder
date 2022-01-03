@@ -20,31 +20,21 @@ profiles!
 is a repository based
 on [Anime4K-PyWrapper](https://github.com/ThoughtfulDev/Anime4K) that updates
 the [Anime4K](https://github.com/bloc97/Anime4K) shaders used and other
-changes. The differences between Anime4K-Encode-4.0.1 and this repository are:
+changes. The key differences between Anime4K-Encode-4.0.1 and this repository
+are:
 
 - Cleaned up code
-- Re-added NVENC support
-- Added AMD GPU encoding support (completely untested)
+- Re-added NVENC support and added AMD GPU encoding support (completely
+  untested)
 - Re-added 10-bit toggling support
 - Removed official support for videos with a resolution lower than FHD
 - Added support for MP4 files
 - Ability to choose to manually mux subtitles and audio via `--softsubs`
-  and `--softaudio`
+  and `--softaudio`. You can also use `-m multi` which will apply mode shaders
+  with `--softsubs` and `--softaudio`, audio, subs and mux all at once.
 - Ability to skip menus in shader mode via `--skip_menus`
-- `-o`/`--output` works for subs and audio mode
-  <br><b>Note</b>: You must run `mux` mode in the directory these files are
-  located, as there is no command line argument to specify subs and audio
-  locations.
-- Added `-al=<lang>`/`--audio_language=<lang>` which will select the language
-  track to burn in (`--softaudio` will disable this). Supported values are ISO
-  639-2 three-letter language codes as
-  stated [here](https://github.com/mpv-player/mpv/blob/master/DOCS/man/options.rst)
-  for the option "--alang".
-- Renamed `--file` to `--input` as it supports directories
 - Added support for multiple `--input` arguments
-- Use "shader" as the default mode
-- Use 3840x2160 as the default output WxH
-- Use "./shaders" as the default shaders path
+- Use default values for some arguments
 
 ## Installing / Getting started
 

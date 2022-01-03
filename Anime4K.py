@@ -4,11 +4,16 @@ import sys
 
 from extract_audio import extract_audio
 from extract_subs import extract_subs
+from multi import multi
 from mux import mux
 from shader import shader
 from splitter import split_by_seconds, get_video_length
 from utils import __current_version__, is_tool, credz, str2dict
 
+# Constant variables
+MODES_SUPPORTING_MULTI_INPUTS = ["shader", "multi"]
+
+# Print credits
 credz()
 
 # Check for required tools
@@ -32,7 +37,13 @@ parser.add_argument("-v", "--version", required=False,
                     help="Print the current version of Anime4K-Encoder")
 parser.add_argument("-m", "--mode", required=False,
                     default="shader",
-                    help="Mode: choose from audio, subs, shader, or mux, split")
+                    help='''Modes:
+ shader - Apply Anime4K shaders and encode
+ audio - Extract audio tracks from a media file
+ subs - Extract subtitles from a media file
+ mux - Mux/compile a media file with audio files and subtitle files
+ multi - Apply shader with -ss and -sa, audio, subs and mux mode in order
+ split - Split a media file into parts''')
 parser.add_argument("-ew", "--width", required=False, type=int, default=3840,
                     help="Desired width when applying shader")
 parser.add_argument("-eh", "--height", required=False, type=int, default=2160,
@@ -42,9 +53,9 @@ parser.add_argument("-sd", "--shader_dir", required=False, type=str,
                     help="Path to shader folder")
 parser.add_argument("-bit", "--bit", required=False,
                     action='store_true',
-                    help="Set this flag if the source file is 10bit when using shader")
+                    help="Set this flag if the source file is 10bit when using mode shader")
 parser.add_argument("-i", "--input", required=False, action='append',
-                    help="The input file/directory")
+                    help="Input file/directory")
 parser.add_argument("-o", "--output", required=False,
                     help="Output filename/directory")
 parser.add_argument("-sz", "--split_length", required=False, type=int,
@@ -52,20 +63,25 @@ parser.add_argument("-sz", "--split_length", required=False, type=int,
 parser.add_argument("-ss", "--softsubs", required=False,
                     action='store_true',
                     default=False,
-                    help="Set this flag if you want to manually mux subtitles when using shader")
+                    help="Set this flag if you want to manually mux subtitles when using mode shader")
 parser.add_argument("-sa", "--softaudio", required=False,
                     action='store_true',
                     default=False,
-                    help="Set this flag if you want to manually mux audio when using shader")
+                    help="Set this flag if you want to manually mux audio when using mode shader")
 parser.add_argument("-sm", "--skip_menus", required=False, type=str2dict,
-                    help='''Skip shader/encoding choice menus when using shader
+                    help='''Skip shader/encoding choice menus when using mode shader
 Example:
  --skip_menus="shader=4,encoder=cpu,codec=h264,preset=fast,crf=23"
  --skip_menus="shader=4,encoder=nvenc,codec=hevc,preset=fast,qp=24"''')
 parser.add_argument("-al", "--audio_language", required=False, type=str,
                     help=
                     '''Set this to the audio track language for the output video.
+Supported values are ISO 639-2 three-letter language codes.
 This will not do anything if "--softaudio" is used.''')
+parser.add_argument("--delete_failures", required=False,
+                    action='store_true',
+                    default=False,
+                    help="Set this flag to delete output files that have failed to compile when using mode multi")
 
 args = vars(parser.parse_args())
 if args['version']:
@@ -98,12 +114,12 @@ if type(fn) is list:
                 "error: Cannot use multiple inputs with mode={0}".format(mode))
             sys.exit(-2)
         for file in fn:
-            exit_if_missing(file, mode == "shader")
+            exit_if_missing(file, mode in MODES_SUPPORTING_MULTI_INPUTS)
     else:
         fn = fn[0]
-        exit_if_missing(fn, mode == "shader")
+        exit_if_missing(fn, mode in MODES_SUPPORTING_MULTI_INPUTS)
 else:
-    exit_if_missing(fn, mode == "shader")
+    exit_if_missing(fn, mode in MODES_SUPPORTING_MULTI_INPUTS)
 
 if mode == "subtitles":
     mode = "subs"
@@ -120,7 +136,7 @@ if mode == "audio" or mode == "subs":
         else:
             if not output.endswith("/"):
                 output = output + "/"
-elif mode == "mux" or mode == "shader":
+elif mode == "mux" or mode == "shader" or mode == "multi":
     output = args['output'] or "out.mkv"
 elif mode == "split":
     output = args['output']
@@ -137,6 +153,11 @@ elif mode == "shader":
     shader(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
            args['audio_language'], args['softsubs'], args['softaudio'],
            args['skip_menus'] or {}, output)
+elif mode == "multi":
+    if type(fn) is str:
+        fn = [fn]
+    multi(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
+          args['skip_menus'], args['delete_failures'], output)
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],
