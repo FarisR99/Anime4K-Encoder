@@ -12,6 +12,10 @@ def genExt(codec):
         return "ass"
     elif "SRT" in codec or "SubRip" in codec:
         return "srt"
+    elif "VobSub" in codec:
+        return "idx"
+    else:
+        return None
 
 
 def extract_subs(fn: str, out_dir: str):
@@ -34,9 +38,13 @@ def extract_subs(fn: str, out_dir: str):
     for track in tracks:
         if track.track_type == 'subtitles':
             ext = genExt(track._track_codec)
+            if ext is None:
+                print("WARNING: Skipping unknown subtitle with id={0}, codec={1}".format(str(track._track_id), str(track._track_codec or "Unknown")))
+                continue
             lang = track._language
             id = str(track._track_id)
 
             subprocess.call(['mkvextract', 'tracks', fn,
-                             id + ':' + out_dir + lang + '_' + id + '.' + ext])
+                             id + ':' + str(out_dir) + str(
+                                 lang) + '_' + id + '.' + ext])
     print("Subtitle extraction end time: " + current_date())

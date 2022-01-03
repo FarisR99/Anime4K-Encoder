@@ -81,6 +81,7 @@ def mux(fn: str, out: str):
     addSubs(mkv, "sup")
     addSubs(mkv, "srt")
     addSubs(mkv, "ass")
+    addSubs(mkv, "idx")
 
     print("Mux start time: " + current_date())
     mkv.mux(out)
@@ -101,4 +102,6 @@ def mux(fn: str, out: str):
     delete_by_extension("sup")
     delete_by_extension("srt")
     delete_by_extension("ass")
+    delete_by_extension("idx")
+    delete_by_extension("sub")
     print("Cleaned!")
