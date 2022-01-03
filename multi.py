@@ -27,6 +27,8 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
 
     """
 
+    if skip_menus is None:
+        skip_menus = {}
     encoded_files = shader(fn=fn, width=width, height=height,
                            shader_path=shader_path,
                            ten_bit=ten_bit, language="", softsubs=True,
