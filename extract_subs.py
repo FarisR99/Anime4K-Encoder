@@ -37,7 +37,7 @@ def extract_subs(fn: str, out_dir: str):
         if track.track_type == 'subtitles':
             ext = genExt(track._track_codec)
             if ext is None:
-                print("WARNING: Skipping unknown subtitle codec={0}".format(str(track._track_codec or "Unknown")))
+                print("WARNING: Skipping unknown subtitle with id={0}, codec={1}".format(str(track._track_id), str(track._track_codec or "Unknown")))
                 continue
             lang = track._language
             id = str(track._track_id)
