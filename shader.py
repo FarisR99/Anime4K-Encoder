@@ -157,6 +157,14 @@ def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
     subprocess.call(args)
 
 
+def cleanup():
+    """
+    Post-encoding cleanup
+    """
+
+    os.remove("temp.mkv")
+
+
 def shader(fn: "list[str]", width: int, height: int, shader_path: str,
            ten_bit: bool,
            language: str, softsubs: bool, softaudio: bool, skip_menus: dict,
@@ -267,9 +275,6 @@ def shader(fn: "list[str]", width: int, height: int, shader_path: str,
 
     start_encoding(codec, encoder, width, height, shader_path, ten_bit,
                    language, softsubs, softaudio, skip_menus, outname, files)
-
-    # Delete temp.mkv
-    os.remove("temp.mkv")
 
 
 def start_encoding(codec: str, encoder: str, width: int, height: int,
@@ -441,11 +446,31 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
     if len(files) == 1:
         # No need to remove audio and subs for a single file
         # since it is done prior in the shader function
-        subprocess.call(encoding_args + ['--o=' + outname, "temp.mkv"])
+        return_code = -1
+        try:
+            return_code = subprocess.call(
+                encoding_args + ['--o=' + outname, "temp.mkv"]
+            )
+        except KeyboardInterrupt:
+            print("Cancelled encoding of file={0}".format(files[0]))
+            print("End time: " + current_date())
+            cleanup()
+            print("Exiting program...")
+            try:
+                sys.exit(-1)
+            except SystemExit:
+                os._exit(-1)
         print("End time: " + current_date())
-        print("Complete!")
+        print()
+        if return_code == 0:
+            print("Successfully encoded file to: {0}".format(outname))
+        else:
+            print("Failed to encode file={0} to output={1}".format(
+                files[0], outname))
+            print("mpv/ffmpeg exited with code={0}".format(return_code))
     else:
         i = 0
+        failed_files = []
         for f in files:
             name = f.split("/")
             name = name[len(name) - 1]
@@ -457,10 +482,23 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                                                         current_date()))
 
             raw_name = os.path.splitext(name)[0]
-            subprocess.call(encoding_args + [
-                '--o=' + os.path.join(outname, raw_name + ".mkv"),
-                "temp.mkv"
-            ])
+            return_code = -1
+            try:
+                return_code = subprocess.call(encoding_args + [
+                    '--o=' + os.path.join(outname, raw_name + ".mkv"),
+                    "temp.mkv"
+                ])
+            except KeyboardInterrupt:
+                print("Cancelled encoding of file={0}".format(f))
+                print("End time: " + current_date())
+                cleanup()
+                print("Exiting program...")
+                try:
+                    sys.exit(-1)
+                except SystemExit:
+                    os._exit(-1)
+            if return_code != 0:
+                failed_files.append(f)
             print("End time for file={0}: {1}".format(str(i + 1),
                                                       current_date()))
             clear()
@@ -468,4 +506,9 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
         print("Files: {0}".format(files_string))
         print("Start time: {0}".format(start_time))
         print("End time: {0}".format(current_date()))
-        print("Complete!")
+        if len(failed_files) > 0:
+            print("Failed to encode files: {0}".format(
+                ", ".join(failed_files)))
+        else:
+            print(
+                "Encoded all {0} files successfully.".format(str(len(files))))
