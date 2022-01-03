@@ -289,19 +289,24 @@ def shader(fn: "list[str]", width: int, height: int, shader_path: str,
                           files)
 
 
-def handle_encoding_cancellation(file_name: str, start_time: str):
+def handle_encoding_cancellation(file_name: str, output_file, start_time: str):
     """
     Handle cancellation during encoding
 
     Args:
         file_name: The current file being encoded
+        output_file: The output file to delete
         start_time: The time the first file began encoding
     """
 
     print("Cancelled encoding of file={0}".format(file_name))
     print("Start time: {0}".format(start_time))
     print("End time: " + current_date())
+    print()
+    print("Deleting temporary files...")
     shader_cleanup()
+    if output_file is not None:
+        os.remove(output_file)
     print("Exiting program...")
     try:
         sys.exit(-1)
@@ -497,7 +502,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 encoding_args + ['--o=' + outname, "temp.mkv"]
             )
         except KeyboardInterrupt:
-            handle_encoding_cancellation(files[0], start_time)
+            handle_encoding_cancellation(files[0], outname, start_time)
         print("End time: " + current_date())
         os.remove("temp.mkv")
         print()
@@ -530,7 +535,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                     "temp.mkv"
                 ])
             except KeyboardInterrupt:
-                handle_encoding_cancellation(f, start_time)
+                handle_encoding_cancellation(f, output_path, start_time)
             if return_code != 0:
                 failed_files.append(f)
             else:
