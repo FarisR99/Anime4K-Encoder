@@ -353,6 +353,8 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 comp_level = str(crf)
             else:
                 comp_level = "23"
+                print("Invalid crf provided, using default crf={0}".format(
+                    comp_level))
         else:
             comp_level = input(
                 "Insert compression factor (CRF) 0-51\n0 = Lossless | 23 = Default | 51 = Highest compression\n"
@@ -366,6 +368,8 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 comp_level = str(qp)
             else:
                 comp_level = "24"
+                print("Invalid qp provided, using default qp={0}".format(
+                    comp_level))
         else:
             comp_level = input(
                 "Insert Quantization Parameter (QP) 0-51\n0 = Lossless | 24 = Default | 51 = Highest compression\n"
