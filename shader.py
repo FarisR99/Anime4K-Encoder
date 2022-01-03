@@ -358,9 +358,12 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             if codec_preset not in codec_presets:
                 codec_preset = None
         if codec_preset is None:
-            codec_preset = codec_presets[
-                TerminalMenu(codec_presets,
-                             title="Choose Encoder Preset:").show()]
+            selected_codec_preset = TerminalMenu(codec_presets,
+                                                 title="Choose Encoder Preset:").show()
+            if selected_codec_preset is None:
+                print("Cancelled")
+                sys.exit(-1)
+            codec_preset = codec_presets[selected_codec_preset]
 
     comp_level = ""
     if encoder == "cpu":
