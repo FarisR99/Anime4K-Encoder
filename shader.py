@@ -277,6 +277,18 @@ def shader(fn: "list[str]", width: int, height: int, shader_path: str,
                    language, softsubs, softaudio, skip_menus, outname, files)
 
 
+def handle_cancellation(file_name: str, start_time: str):
+    print("Cancelled encoding of file={0}".format(file_name))
+    print("Start time: {0}".format(start_time))
+    print("End time: " + current_date())
+    cleanup()
+    print("Exiting program...")
+    try:
+        sys.exit(-1)
+    except SystemExit:
+        os._exit(-1)
+
+
 def start_encoding(codec: str, encoder: str, width: int, height: int,
                    shader_path: str, ten_bit: bool, language: str,
                    softsubs: bool, softaudio: bool, skip_menus: dict,
@@ -452,14 +464,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 encoding_args + ['--o=' + outname, "temp.mkv"]
             )
         except KeyboardInterrupt:
-            print("Cancelled encoding of file={0}".format(files[0]))
-            print("End time: " + current_date())
-            cleanup()
-            print("Exiting program...")
-            try:
-                sys.exit(-1)
-            except SystemExit:
-                os._exit(-1)
+            handle_cancellation(files[0], start_time)
         print("End time: " + current_date())
         print()
         if return_code == 0:
@@ -489,14 +494,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                     "temp.mkv"
                 ])
             except KeyboardInterrupt:
-                print("Cancelled encoding of file={0}".format(f))
-                print("End time: " + current_date())
-                cleanup()
-                print("Exiting program...")
-                try:
-                    sys.exit(-1)
-                except SystemExit:
-                    os._exit(-1)
+                handle_cancellation(f, start_time)
             if return_code != 0:
                 failed_files.append(f)
             print("End time for file={0}: {1}".format(str(i + 1),
