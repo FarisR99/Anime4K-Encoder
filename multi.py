@@ -38,6 +38,8 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
         print()
         print("error: no files encoded, terminating program early...")
         sys.exit(-2)
+
+    successful_inputs = {}
     failed_inputs = []
     for input_path, output_path in encoded_files.items():
         print()
@@ -68,21 +70,24 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
         except Exception as e:
             print("Failed to mux file={0}".format(output_path))
             print(e)
-            print("Skipping...")
+            print("Deleting encoded file and skipping...")
+            os.remove(output_path)
             failed_inputs.append(input_path)
             continue
         os.remove(output_path)
         print("Successfully compiled file={0}".format(new_output))
+        successful_inputs[input_path] = new_output
     print()
-    if len(failed_inputs) == 0:
+
+    if len(successful_inputs) > 0:
         print(
             "All of the following input files have been encoded and compiled:")
-        print("\n".join(encoded_files.keys()))
-    elif len(failed_inputs) == len(encoded_files):
-        print("Failed to compile the encoded input files.")
-        print("Please try manually muxing the following encoded files:")
-        print("\n".join(failed_inputs))
-    else:
-        print("Some of the encoded input files have been compiled.")
-        print("Failed to compile the following encoded input files:")
-        print("\n".join(failed_inputs))
+        for input_path, output_path in successful_inputs.items():
+            print(" {0} => {1}".format(input_path, output_path))
+    if len(failed_inputs) > 0:
+        print()
+        if len(failed_inputs) == len(encoded_files):
+            print("Failed to compile all encoded input files.")
+        else:
+            print("Failed to compile the following encoded input files:")
+            print("\n".join(failed_inputs))
