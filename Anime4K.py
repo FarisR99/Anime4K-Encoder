@@ -76,6 +76,7 @@ Example:
 parser.add_argument("-al", "--audio_language", required=False, type=str,
                     help=
                     '''Set this to the audio track language for the output video.
+Supported values are ISO 639-2 three-letter language codes.
 This will not do anything if "--softaudio" is used.''')
 parser.add_argument("--delete_failures", required=False,
                     action='store_true',
