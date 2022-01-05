@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 
+from encode import encode_to_hevc
 from extract_audio import extract_audio
 from extract_subs import extract_subs
 from multi import multi
@@ -11,7 +12,8 @@ from splitter import split_by_seconds, get_video_length
 from utils import __current_version__, is_tool, credz, str2dict
 
 # Constant variables
-MODES_SUPPORTING_MULTI_INPUTS = ["shader", "multi"]
+MODES_SUPPORTING_MULTI_INPUTS = ["shader", "multi", "encode"]
+MODES_SUPPORTING_DIR_INPUTS = ["shader", "multi", "encode"]
 
 # Print credits
 credz()
@@ -43,6 +45,7 @@ parser.add_argument("-m", "--mode", required=False,
  subs - Extract subtitles from a media file
  mux - Mux/compile a media file with audio files and subtitle files
  multi - Apply shader with -ss and -sa, audio, subs and mux mode in order
+ encode - Encode media files using X265 with predefined settings
  split - Split a media file into parts''')
 parser.add_argument("-ew", "--width", required=False, type=int, default=3840,
                     help="Desired width when applying shader")
@@ -69,10 +72,12 @@ parser.add_argument("-sa", "--softaudio", required=False,
                     default=False,
                     help="Set this flag if you want to manually mux audio when using mode shader")
 parser.add_argument("-sm", "--skip_menus", required=False, type=str2dict,
-                    help='''Skip shader/encoding choice menus when using mode shader
-Example:
+                    help='''Skip choice menus
+Examples for mode shader:
  --skip_menus="shader=4,encoder=cpu,codec=h264,preset=fast,crf=23"
- --skip_menus="shader=4,encoder=nvenc,codec=hevc,preset=fast,qp=24"''')
+ --skip_menus="shader=4,encoder=nvenc,codec=hevc,preset=fast,qp=24"
+Example for mode encode:
+ --skip_menus="encode=0"''')
 parser.add_argument("-al", "--audio_language", required=False, type=str,
                     help=
                     '''Set this to the audio track language for the output video.
@@ -111,17 +116,20 @@ if fn is None:
     sys.exit(-2)
 if type(fn) is list:
     if len(fn) != 1:
-        if mode != "shader":
+        if mode not in MODES_SUPPORTING_MULTI_INPUTS:
             print(
                 "error: Cannot use multiple inputs with mode={0}".format(mode))
             sys.exit(-2)
         for file in fn:
-            exit_if_missing(file, mode in MODES_SUPPORTING_MULTI_INPUTS)
+            exit_if_missing(file, mode in MODES_SUPPORTING_DIR_INPUTS)
     else:
         fn = fn[0]
-        exit_if_missing(fn, mode in MODES_SUPPORTING_MULTI_INPUTS)
+        exit_if_missing(fn, mode in MODES_SUPPORTING_DIR_INPUTS)
 else:
-    exit_if_missing(fn, mode in MODES_SUPPORTING_MULTI_INPUTS)
+    exit_if_missing(fn, mode in MODES_SUPPORTING_DIR_INPUTS)
+if mode in MODES_SUPPORTING_MULTI_INPUTS:
+    if type(fn) is str:
+        fn = [fn]
 
 if mode == "subtitles":
     mode = "subs"
@@ -140,7 +148,7 @@ if mode == "audio" or mode == "subs":
                 output = output + "/"
 elif mode == "mux" or mode == "shader" or mode == "multi":
     output = args['output'] or "out.mkv"
-elif mode == "split":
+else:
     output = args['output']
 
 if mode == "audio":
@@ -150,23 +158,25 @@ elif mode == "subs":
 elif mode == "mux":
     mux(fn, output)
 elif mode == "shader" or mode == "multi":
-    if type(fn) is str:
-        fn = [fn]
     skip_inputs = args['skip_input']
     if skip_inputs is None:
         skip_inputs = []
     elif type(skip_inputs) is str:
         skip_inputs = [skip_inputs]
+    skip_menus = args['skip_menus']
+    if skip_menus is None:
+        skip_menus = {}
 
     if mode == "shader":
         shader(fn, skip_inputs, args['width'], args['height'],
                args['shader_dir'], args['bit'], args['audio_language'],
-               args['softsubs'], args['softaudio'], args['skip_menus'] or {},
-               output)
+               args['softsubs'], args['softaudio'], skip_menus, output)
     else:
         multi(fn, skip_inputs, args['width'], args['height'],
-              args['shader_dir'], args['bit'], args['skip_menus'],
+              args['shader_dir'], args['bit'], skip_menus,
               args['delete_failures'], output)
+elif mode == "encode":
+    encode_to_hevc(fn, output, args['skip_menus'] or {})
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],
