@@ -530,7 +530,15 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             name = name[len(name) - 1]
             remove_audio_and_subs(f, softsubs, softaudio)
             clear()
-            print("Files: {0}".format(files_string))
+            print("Encoded files: {0}".format(
+                ", ".join(successful_encodes.keys())))
+            print("Remaining files: {0}".format(", ".join(
+                [
+                    item for item in files
+                    if
+                    item not in failed_files and item not in successful_encodes
+                ]
+            )))
             print("Start time: {0}".format(start_time))
             print("Start time for file={0}: {1}".format(str(i + 1),
                                                         current_date()))
