@@ -174,15 +174,15 @@ def shader_cleanup():
     os.remove("temp.mkv")
 
 
-def shader(fn: "list[str]", width: int, height: int, shader_path: str,
-           ten_bit: bool,
-           language: str, softsubs: bool, softaudio: bool, skip_menus: dict,
-           outname: str) -> dict:
+def shader(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
+           shader_path: str, ten_bit: bool, language: str, softsubs: bool,
+           softaudio: bool, skip_menus: dict, outname: str) -> dict:
     """
     Select encoding and start the encoding process.
 
     Args:
         fn: list of input media paths
+        skip_inputs: list of input media paths to skip
         width: output width
         height: output height
         shader_path: path the shaders are located at
@@ -205,10 +205,16 @@ def shader(fn: "list[str]", width: int, height: int, shader_path: str,
     files = []
     for file in fn:
         if os.path.isdir(file):
-            for fileInDir in glob.glob(os.path.join(file, "*.mkv")):
-                files.append(os.path.join(fileInDir))
-            for fileInDir in glob.glob(os.path.join(file, "*.mp4")):
-                files.append(os.path.join(fileInDir))
+            for file_in_dir in glob.glob(os.path.join(file, "*.mkv")):
+                file_name = os.path.basename(file_in_dir)
+                if file_name in skip_inputs:
+                    continue
+                files.append(os.path.join(file_in_dir))
+            for file_in_dir in glob.glob(os.path.join(file, "*.mp4")):
+                file_name = os.path.basename(file_in_dir)
+                if file_name in skip_inputs:
+                    continue
+                files.append(os.path.join(file_in_dir))
         else:
             files.append(os.path.join(file))
     file_count = len(files)

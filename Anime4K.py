@@ -82,6 +82,8 @@ parser.add_argument("--delete_failures", required=False,
                     action='store_true',
                     default=False,
                     help="Set this flag to delete output files that have failed to compile when using mode multi")
+parser.add_argument("-si", "--skip_input", required=False, action='append',
+                    help="Input file to skip when using a directory as an input for modes shader and multi")
 
 args = vars(parser.parse_args())
 if args['version']:
@@ -147,17 +149,24 @@ elif mode == "subs":
     extract_subs(fn, output)
 elif mode == "mux":
     mux(fn, output)
-elif mode == "shader":
+elif mode == "shader" or mode == "multi":
     if type(fn) is str:
         fn = [fn]
-    shader(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
-           args['audio_language'], args['softsubs'], args['softaudio'],
-           args['skip_menus'] or {}, output)
-elif mode == "multi":
-    if type(fn) is str:
-        fn = [fn]
-    multi(fn, args['width'], args['height'], args['shader_dir'], args['bit'],
-          args['skip_menus'], args['delete_failures'], output)
+    skip_inputs = args['skip_input']
+    if skip_inputs is None:
+        skip_inputs = []
+    elif type(skip_inputs) is str:
+        skip_inputs = [skip_inputs]
+
+    if mode == "shader":
+        shader(fn, skip_inputs, args['width'], args['height'],
+               args['shader_dir'], args['bit'], args['audio_language'],
+               args['softsubs'], args['softaudio'], args['skip_menus'] or {},
+               output)
+    else:
+        multi(fn, skip_inputs, args['width'], args['height'],
+              args['shader_dir'], args['bit'], args['skip_menus'],
+              args['delete_failures'], output)
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],

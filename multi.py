@@ -7,7 +7,8 @@ from mux import clean_up, mux
 from shader import shader
 
 
-def multi(fn: "list[str]", width: int, height: int, shader_path: str,
+def multi(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
+          shader_path: str,
           ten_bit: bool, skip_menus: dict, del_failures: bool, outname: str):
     """
     Run mode shader on the input files, then for each file successfully
@@ -17,6 +18,7 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
 
     Args:
         fn: list of input files
+        skip_inputs: list of input files to skip
         width: desired width of video
         height: desired height of video
         shader_path: path where the shaders are located
@@ -30,11 +32,11 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
 
     if skip_menus is None:
         skip_menus = {}
-    encoded_files = shader(fn=fn, width=width, height=height,
-                           shader_path=shader_path,
+    encoded_files = shader(fn=fn, skip_inputs=skip_inputs, width=width,
+                           height=height, shader_path=shader_path,
                            ten_bit=ten_bit, language="", softsubs=True,
-                           softaudio=True,
-                           skip_menus=skip_menus, outname=outname)
+                           softaudio=True, skip_menus=skip_menus,
+                           outname=outname)
     if len(encoded_files) == 0:
         print()
         print("error: no files encoded, terminating program early...")
