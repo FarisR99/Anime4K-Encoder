@@ -76,6 +76,8 @@ parser.add_argument("-sm", "--skip_menus", required=False, type=str2dict,
 Examples for mode shader:
  --skip_menus="shader=4,encoder=cpu,codec=h264,preset=fast,crf=23"
  --skip_menus="shader=4,encoder=nvenc,codec=hevc,preset=fast,qp=24"
+Example for mode audio:
+ --skip_menus="convert=0"
 Example for mode encode:
  --skip_menus="encode=0"''')
 parser.add_argument("-al", "--audio_language", required=False, type=str,
@@ -152,7 +154,11 @@ else:
     output = args['output']
 
 if mode == "audio":
-    extract_audio(fn, output)
+    skip_menus = args['skip_menus']
+    if skip_menus is None:
+        skip_menus = {}
+
+    extract_audio(fn, output, skip_menus)
 elif mode == "subs":
     extract_subs(fn, output)
 elif mode == "mux":

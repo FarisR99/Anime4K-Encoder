@@ -61,7 +61,7 @@ def multi(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
             continue
         print()
         print("Starting mode audio for input={0}".format(input_path))
-        if not extract_audio(input_path, ""):
+        if not extract_audio(input_path, "", skip_menus):
             print(
                 "Failed to extract audio for file={0}".format(input_path)
             )
