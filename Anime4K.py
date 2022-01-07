@@ -106,6 +106,7 @@ def exit_if_missing(file_path: str, allow_dir: bool = True):
     elif allow_dir is False:
         print("error: cannot use a directory ({0}) as an input for this mode"
               .format(file_path))
+        sys.exit(-2)
 
 
 fn = args['input']
