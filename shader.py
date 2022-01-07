@@ -24,10 +24,12 @@ def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
     """
 
     mode_choice = None
-    if "shader" in skip_menus and skip_menus['shader'] is not None:
+    if "shader" in skip_menus:
         mode_choice = int(skip_menus['shader'])
         if mode_choice < 0 or mode_choice > 5:
             mode_choice = None
+    elif "recommended" in skip_menus and skip_menus['recommended'] == "1":
+        mode_choice = 4
     if mode_choice is None:
         mode_menu = TerminalMenu(
             [
@@ -237,12 +239,15 @@ def shader(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
     codec = ""
     encoder = ""
 
-    if "encoder" in skip_menus and skip_menus['encoder'] is not None:
+    if "encoder" in skip_menus:
         encoder = skip_menus['encoder']
         if encoder != 'cpu' and encoder != 'nvenc' and encoder != 'amf':
             print("Unsupported encoder: {0}".format(encoder))
             sys.exit(-2)
-    if "codec" in skip_menus and skip_menus['codec'] is not None:
+    if encoder == "":
+        if "recommended" in skip_menus and skip_menus["recommended"] == "1":
+            encoder = "cpu"
+    if "codec" in skip_menus:
         codec = skip_menus['codec']
         if codec == 'x264':
             codec = 'h264'
@@ -255,6 +260,9 @@ def shader(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
         if codec != 'h264' and codec != 'hevc':
             print("Unsupported codec={0}".format(encoder))
             sys.exit(-2)
+    if codec == "":
+        if "recommended" in skip_menus and skip_menus["recommended"] == "1":
+            codec = "h264"
     if codec == "" or encoder == "":
         cg_menu = TerminalMenu(
             [
@@ -371,10 +379,12 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
         elif encoder == "nvenc":
             codec_presets = ["fast", "medium", "slow", "lossless"]
         codec_preset = None
-        if "preset" in skip_menus and skip_menus['preset'] is not None:
+        if "preset" in skip_menus:
             codec_preset = skip_menus['preset']
             if codec_preset not in codec_presets:
                 codec_preset = None
+        elif "recommended" in skip_menus and skip_menus["recommended"] == "1":
+            codec_preset = "fast"
         if codec_preset is None:
             selected_codec_preset = TerminalMenu(codec_presets,
                                                  title="Choose Encoder Preset:").show()
@@ -386,7 +396,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
 
     comp_level = ""
     if encoder == "cpu":
-        if "crf" in skip_menus and skip_menus['crf'] is not None:
+        if "crf" in skip_menus:
             crf = int(skip_menus['crf'])
             if 0 <= crf <= 51:
                 comp_level = str(crf)
@@ -394,6 +404,8 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 comp_level = "23"
                 print("Invalid crf provided, using default crf={0}".format(
                     comp_level))
+        elif "recommended" in skip_menus and skip_menus["recommended"] == "1":
+            comp_level = "23"
         else:
             comp_level = input(
                 "Insert compression factor (CRF) 0-51\n0 = Lossless | 23 = Default | 51 = Highest compression\n"
@@ -401,7 +413,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             if comp_level == "" or comp_level is None:
                 comp_level = "23"
     elif encoder == "nvenc" or encoder == "amf":
-        if "qp" in skip_menus and skip_menus['qp'] is not None:
+        if "qp" in skip_menus:
             qp = int(skip_menus['qp'])
             if 0 <= qp <= 51:
                 comp_level = str(qp)
@@ -409,6 +421,8 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 comp_level = "24"
                 print("Invalid qp provided, using default qp={0}".format(
                     comp_level))
+        elif "recommended" in skip_menus and skip_menus["recommended"] == "1":
+            comp_level = "24"
         else:
             comp_level = input(
                 "Insert Quantization Parameter (QP) 0-51\n0 = Lossless | 24 = Default | 51 = Highest compression\n"
