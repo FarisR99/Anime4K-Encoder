@@ -71,6 +71,9 @@ def extract_audio(fn: str, out_dir: str) -> bool:
                     title="What's the format of the file? => {0}".format(f)
                 )
                 br_choice = br_menu.show()
+                if br_choice is None:
+                    print("Cancelled conversion")
+                    continue
                 if br_choice == 0:
                     br = "192K"
                 elif br_choice == 1:
@@ -81,8 +84,9 @@ def extract_audio(fn: str, out_dir: str) -> bool:
                     br = "192K"
                 fn_base = f.split(".")[0]
                 out_audio = fn_base + ".Opus"
+                return_code = -1
                 try:
-                    subprocess.call([
+                    return_code = subprocess.call([
                         "ffmpeg",
                         "-hide_banner",
                         "-i",
@@ -98,12 +102,8 @@ def extract_audio(fn: str, out_dir: str) -> bool:
                 except KeyboardInterrupt:
                     print("Cancelled conversion.")
                     os.remove(out_audio)
-                    print("Exiting program...")
-                    try:
-                        sys.exit(-1)
-                    except SystemExit:
-                        os._exit(-1)
                 time.sleep(1)
-                os.remove(f)
+                if return_code == 0:
+                    os.remove(f)
             print("Conversion end time: " + current_date())
     return success
