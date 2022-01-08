@@ -285,7 +285,13 @@ Would you like to overwrite the input files?'''.format(
     else:
         clear()
         if output_is_dir:
-            outname = os.path.join(outname, "out.mkv")
+            new_outname = os.path.join(outname, "out.mkv")
+            out_name_index = 1
+            while os.path.exists(new_outname):
+                new_outname = os.path.join(outname, "out-{0}.mkv"
+                                           .format(str(out_name_index)))
+                out_name_index = out_name_index + 1
+            outname = new_outname
         remove_audio_and_subs(files[0], softsubs, softaudio)
         clear()
 
