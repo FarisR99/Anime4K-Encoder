@@ -5,6 +5,7 @@ from extract_audio import extract_audio
 from extract_subs import extract_subs
 from mux import clean_up, mux
 from shader import shader
+from utils import clear
 
 
 def multi(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
@@ -36,11 +37,14 @@ def multi(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
                            height=height, shader_path=shader_path,
                            ten_bit=ten_bit, language="", softsubs=True,
                            softaudio=True, skip_menus=skip_menus,
-                           outname=outname)
+                           exit_on_cancel=False, outname=outname)
+    clear()
     if len(encoded_files) == 0:
         print()
         print("error: no files encoded, terminating program early...")
         sys.exit(-2)
+    else:
+        print("Encoded files: {0}".format(", ".join(encoded_files.keys())))
 
     successful_inputs = {}
     failed_inputs = []

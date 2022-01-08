@@ -176,9 +176,38 @@ def shader_cleanup():
     os.remove("temp.mkv")
 
 
+def handle_encoding_cancellation(file_name: str, output_file, start_time: str,
+                                 exit: bool):
+    """
+    Handle cancellation during encoding
+
+    Args:
+        file_name: The current file being encoded
+        output_file: The output file to delete
+        start_time: The time the first file began encoding
+        exit: true if the program should terminate
+    """
+
+    print("Cancelled encoding of file={0}".format(file_name))
+    print("Start time: {0}".format(start_time))
+    print("End time: " + current_date())
+    print()
+    print("Deleting temporary files...")
+    shader_cleanup()
+    if output_file is not None:
+        os.remove(output_file)
+    if exit:
+        print("Exiting program...")
+        try:
+            sys.exit(-1)
+        except SystemExit:
+            os._exit(-1)
+
+
 def shader(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
            shader_path: str, ten_bit: bool, language: str, softsubs: bool,
-           softaudio: bool, skip_menus: dict, outname: str) -> dict:
+           softaudio: bool, skip_menus: dict, exit_on_cancel: bool,
+           outname: str) -> dict:
     """
     Select encoding and start the encoding process.
 
@@ -193,6 +222,8 @@ def shader(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
         softsubs: true if subtitles should be removed
         softaudio: true if audio should be removed
         skip_menus: menu skipping options passed from command line
+        exit_on_cancel: true if the program should exit when the user cancels
+            during encoding, false if the function call should terminate
         outname: output path
 
     Returns:
@@ -205,8 +236,31 @@ def shader(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
         sys.exit(-2)
 
     files = []
+    output_is_dir = os.path.isdir(outname)
     for file in fn:
         if os.path.isdir(file):
+            if output_is_dir and os.path.abspath(file) == os.path.abspath(
+                    outname):
+                ow_choice = None
+                if "overwrite" in skip_menus:
+                    ow_choice = int(skip_menus['overwrite'])
+                    if ow_choice < 0 or ow_choice > 2:
+                        ow_choice = None
+                if ow_choice is None:
+                    ow_menu = TerminalMenu(
+                        ["Cancel", "Overwrite", "Skip"],
+                        title='''Output directory is the same as the input directory.
+Input = Output = {0}
+Would you like to overwrite the input files?'''.format(
+                            os.path.abspath(outname))
+                    )
+                    ow_choice = ow_menu.show()
+                    if ow_choice is None or ow_choice == 0:
+                        print("Cancelled encoding.")
+                        sys.exit(-2)
+                    elif ow_choice == 2:
+                        continue
+
             for file_in_dir in glob.glob(os.path.join(file, "*.mkv")):
                 file_name = os.path.basename(file_in_dir)
                 if file_name in skip_inputs:
@@ -221,7 +275,7 @@ def shader(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
             files.append(os.path.join(file))
     file_count = len(files)
     if file_count > 1:
-        if not os.path.isdir(outname):
+        if not output_is_dir:
             print(
                 "error: output path must be a directory when there are more than one input files")
             sys.exit(-2)
@@ -230,7 +284,7 @@ def shader(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
         sys.exit(-2)
     else:
         clear()
-        if os.path.isdir(outname):
+        if output_is_dir:
             outname = os.path.join(outname, "out.mkv")
         remove_audio_and_subs(files[0], softsubs, softaudio)
         clear()
@@ -300,58 +354,17 @@ def shader(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
             sys.exit(-2)
 
     return start_encoding(codec, encoder, width, height, shader_path, ten_bit,
-                          language, softsubs, softaudio, skip_menus, outname,
-                          files)
-
-
-def handle_encoding_cancellation(file_name: str, output_file, start_time: str):
-    """
-    Handle cancellation during encoding
-
-    Args:
-        file_name: The current file being encoded
-        output_file: The output file to delete
-        start_time: The time the first file began encoding
-    """
-
-    print("Cancelled encoding of file={0}".format(file_name))
-    print("Start time: {0}".format(start_time))
-    print("End time: " + current_date())
-    print()
-    print("Deleting temporary files...")
-    shader_cleanup()
-    if output_file is not None:
-        os.remove(output_file)
-    print("Exiting program...")
-    try:
-        sys.exit(-1)
-    except SystemExit:
-        os._exit(-1)
+                          language, softsubs, softaudio, skip_menus,
+                          exit_on_cancel, outname, files)
 
 
 def start_encoding(codec: str, encoder: str, width: int, height: int,
                    shader_path: str, ten_bit: bool, language: str,
                    softsubs: bool, softaudio: bool, skip_menus: dict,
-                   outname: str, files: "list[str]") -> dict:
+                   exit_on_cancel: bool, outname: str,
+                   files: "list[str]") -> dict:
     """
     Start the encoding of input file(s) to the specified encoding using the CPU.
-
-    Args:
-        codec: h264/hevc
-        encoder: cpu/nvenc/amf
-        width: output width
-        height: output height
-        shader_path: path the shaders are located at
-        ten_bit: true if the input media is a 10 bit source
-        language: optional desired audio track language
-        softsubs: true if subtitles should be removed
-        softaudio: true if audio should be removed
-        skip_menus: menu skipping options passed from command line
-        outname: output path
-        files: list of input media file paths
-
-    Returns:
-        mapping of files that were successfully encoded to their output paths
     """
 
     clear()
@@ -525,7 +538,9 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 encoding_args + ['--o=' + outname, "temp.mkv"]
             )
         except KeyboardInterrupt:
-            handle_encoding_cancellation(files[0], outname, start_time)
+            handle_encoding_cancellation(files[0], outname, start_time,
+                                         exit_on_cancel)
+            return successful_encodes
         print("End time: " + current_date())
         os.remove("temp.mkv")
         print()
@@ -566,7 +581,10 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                     "temp.mkv"
                 ])
             except KeyboardInterrupt:
-                handle_encoding_cancellation(f, output_path, start_time)
+                handle_encoding_cancellation(f, output_path, start_time,
+                                             exit_on_cancel)
+                return successful_encodes
+
             if return_code != 0:
                 failed_files.append(f)
             else:

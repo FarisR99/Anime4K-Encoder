@@ -177,7 +177,7 @@ elif mode == "shader" or mode == "multi":
     if mode == "shader":
         shader(fn, skip_inputs, args['width'], args['height'],
                args['shader_dir'], args['bit'], args['audio_language'],
-               args['softsubs'], args['softaudio'], skip_menus, output)
+               args['softsubs'], args['softaudio'], skip_menus, True, output)
     else:
         multi(fn, skip_inputs, args['width'], args['height'],
               args['shader_dir'], args['bit'], skip_menus,
