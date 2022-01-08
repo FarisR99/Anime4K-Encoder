@@ -8,8 +8,7 @@ from shader import shader
 from utils import clear
 
 
-def multi(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
-          shader_path: str,
+def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
           ten_bit: bool, skip_menus: dict, del_failures: bool, outname: str):
     """
     Run mode shader on the input files, then for each file successfully
@@ -18,8 +17,7 @@ def multi(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
     extracted subs and audio track files.
 
     Args:
-        fn: list of input files
-        skip_inputs: list of input files to skip
+        input_files: list of input media files
         width: desired width of video
         height: desired height of video
         shader_path: path where the shaders are located
@@ -33,9 +31,9 @@ def multi(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
 
     if skip_menus is None:
         skip_menus = {}
-    encoded_files = shader(fn=fn, skip_inputs=skip_inputs, width=width,
-                           height=height, shader_path=shader_path,
-                           ten_bit=ten_bit, language="", softsubs=True,
+    encoded_files = shader(input_files=input_files, width=width, height=height,
+                           shader_path=shader_path, ten_bit=ten_bit,
+                           language="", softsubs=True,
                            softaudio=True, skip_menus=skip_menus,
                            exit_on_cancel=False, outname=outname)
     clear()

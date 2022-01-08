@@ -1,4 +1,5 @@
 import argparse
+import glob
 import os
 import sys
 
@@ -13,7 +14,6 @@ from utils import __current_version__, is_tool, credz, str2dict
 
 # Constant variables
 MODES_SUPPORTING_MULTI_INPUTS = ["shader", "multi", "encode"]
-MODES_SUPPORTING_DIR_INPUTS = ["shader", "multi", "encode"]
 
 # Print credits
 credz()
@@ -109,10 +109,13 @@ def exit_if_missing(file_path: str, allow_dir: bool = True):
         sys.exit(-2)
 
 
-fn = args['input']
+# Validate "mode" argument
 mode = str(args['mode']).lower()
+if mode == "subtitles":
+    mode = "subs"
 
 # Validate "input" argument
+fn = args['input']
 if fn is None:
     parser.print_help()
     print("error: the following arguments are required: -i/--input")
@@ -121,21 +124,18 @@ if type(fn) is list:
     if len(fn) != 1:
         if mode not in MODES_SUPPORTING_MULTI_INPUTS:
             print(
-                "error: Cannot use multiple inputs with mode={0}".format(mode))
+                "error: cannot use multiple inputs with mode={0}".format(mode))
             sys.exit(-2)
         for file in fn:
-            exit_if_missing(file, mode in MODES_SUPPORTING_DIR_INPUTS)
+            exit_if_missing(file, mode in MODES_SUPPORTING_MULTI_INPUTS)
     else:
         fn = fn[0]
-        exit_if_missing(fn, mode in MODES_SUPPORTING_DIR_INPUTS)
+        exit_if_missing(fn, mode in MODES_SUPPORTING_MULTI_INPUTS)
 else:
-    exit_if_missing(fn, mode in MODES_SUPPORTING_DIR_INPUTS)
+    exit_if_missing(fn, mode in MODES_SUPPORTING_MULTI_INPUTS)
 if mode in MODES_SUPPORTING_MULTI_INPUTS:
     if type(fn) is str:
         fn = [fn]
-
-if mode == "subtitles":
-    mode = "subs"
 
 # Validate "output" argument
 if mode == "audio" or mode == "subs":
@@ -149,44 +149,81 @@ if mode == "audio" or mode == "subs":
         else:
             if not output.endswith("/"):
                 output = output + "/"
-elif mode == "mux" or mode == "shader" or mode == "multi":
+elif mode in MODES_SUPPORTING_MULTI_INPUTS:
     output = args['output'] or "out.mkv"
+    if os.path.isdir(output) and not os.path.exists(output):
+        try:
+            os.mkdir(output)
+        except Exception as e:
+            print(
+                "error: failed to create output directory={0}:".format(output))
+            print(e)
+            sys.exit(-2)
 else:
     output = args['output']
 
-if mode == "audio":
-    skip_menus = args['skip_menus']
-    if skip_menus is None:
-        skip_menus = {}
-
-    extract_audio(fn, output, skip_menus)
-elif mode == "subs":
-    extract_subs(fn, output)
-elif mode == "mux":
-    mux(fn, output)
-elif mode == "shader" or mode == "multi":
+# Collect input file paths from the input argument(s)
+in_files = []
+if mode in MODES_SUPPORTING_MULTI_INPUTS:
     skip_inputs = args['skip_input']
     if skip_inputs is None:
         skip_inputs = []
     elif type(skip_inputs) is str:
         skip_inputs = [skip_inputs]
-    skip_menus = args['skip_menus']
-    if skip_menus is None:
-        skip_menus = {}
 
-    if mode == "shader":
-        shader(fn, skip_inputs, args['width'], args['height'],
-               args['shader_dir'], args['bit'], args['audio_language'],
-               args['softsubs'], args['softaudio'], skip_menus, True, output)
-    else:
-        multi(fn, skip_inputs, args['width'], args['height'],
-              args['shader_dir'], args['bit'], skip_menus,
-              args['delete_failures'], output)
+    for file in fn:
+        if os.path.isdir(file):
+            for file_in_dir in glob.glob(
+                    os.path.join(file, "*.mkv")
+            ) + glob.glob(
+                os.path.join(file, "*.mp4")
+            ):
+                file_name = os.path.basename(file_in_dir)
+                if file_name in skip_inputs:
+                    continue
+                in_files.append(os.path.join(file_in_dir))
+        else:
+            # Only here for consistency
+            # Why would you specify a file input then add that file
+            # to a list of files to ignore?
+            if file in skip_inputs:
+                continue
+            in_files.append(os.path.join(file))
+    file_count = len(in_files)
+    if file_count > 1:
+        if not os.path.isdir(output):
+            print(
+                "error: output path must be a directory when there are more than one input files")
+            sys.exit(-2)
+    elif file_count == 0:
+        print("error: no valid input media files found")
+        sys.exit(-2)
+
+# Validate "skip_menus" argument
+skip_menus = args['skip_menus']
+if skip_menus is None:
+    skip_menus = {}
+
+# Perform action based on mode
+if mode == "audio":
+    extract_audio(fn, output, skip_menus)
+elif mode == "subs":
+    extract_subs(fn, output)
+elif mode == "mux":
+    mux(fn, output)
+elif mode == "shader":
+    shader(in_files, args['width'], args['height'],
+           args['shader_dir'], args['bit'], args['audio_language'],
+           args['softsubs'], args['softaudio'], skip_menus, True, output)
+elif mode == "multi":
+    multi(in_files, args['width'], args['height'],
+          args['shader_dir'], args['bit'], skip_menus,
+          args['delete_failures'], output)
 elif mode == "encode":
-    encode_to_hevc(fn, output, args['skip_menus'] or {})
+    encode_to_hevc(in_files, output, skip_menus)
 elif mode == "split":
     length = get_video_length(fn)
     split_by_seconds(filename=fn, split_length=args['split_length'],
                      video_length=length, split_dir=output)
 else:
-    print("Unknown option: {0}".format(mode))
+    print("Unknown mode: {0}".format(mode))

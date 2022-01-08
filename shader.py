@@ -1,4 +1,3 @@
-import glob
 import os
 import subprocess
 import sys
@@ -204,16 +203,14 @@ def handle_encoding_cancellation(file_name: str, output_file, start_time: str,
             os._exit(-1)
 
 
-def shader(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
-           shader_path: str, ten_bit: bool, language: str, softsubs: bool,
-           softaudio: bool, skip_menus: dict, exit_on_cancel: bool,
-           outname: str) -> dict:
+def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
+           ten_bit: bool, language: str, softsubs: bool, softaudio: bool,
+           skip_menus: dict, exit_on_cancel: bool, outname: str) -> dict:
     """
     Select encoding and start the encoding process.
 
     Args:
-        fn: list of input media paths
-        skip_inputs: list of input media paths to skip
+        input_files: list of input media paths
         width: output width
         height: output height
         shader_path: path the shaders are located at
@@ -235,64 +232,18 @@ def shader(fn: "list[str]", skip_inputs: "list[str]", width: int, height: int,
             shader_path))
         sys.exit(-2)
 
-    files = []
     output_is_dir = os.path.isdir(outname)
-    for file in fn:
-        if os.path.isdir(file):
-            if output_is_dir and os.path.abspath(file) == os.path.abspath(
-                    outname):
-                ow_choice = None
-                if "overwrite" in skip_menus:
-                    ow_choice = int(skip_menus['overwrite'])
-                    if ow_choice < 0 or ow_choice > 2:
-                        ow_choice = None
-                if ow_choice is None:
-                    ow_menu = TerminalMenu(
-                        ["Cancel", "Overwrite", "Skip"],
-                        title='''Output directory is the same as the input directory.
-Input = Output = {0}
-Would you like to overwrite the input files?'''.format(
-                            os.path.abspath(outname))
-                    )
-                    ow_choice = ow_menu.show()
-                    if ow_choice is None or ow_choice == 0:
-                        print("Cancelled encoding.")
-                        sys.exit(-2)
-                    elif ow_choice == 2:
-                        continue
+    if len(input_files) == 1 and output_is_dir:
+        new_outname = os.path.join(outname, "out.mkv")
+        out_name_index = 1
+        while os.path.exists(new_outname):
+            new_outname = os.path.join(outname, "out-{0}.mkv"
+                                       .format(str(out_name_index)))
+            out_name_index = out_name_index + 1
+        outname = new_outname
+        output_is_dir = False
 
-            for file_in_dir in glob.glob(os.path.join(file, "*.mkv")):
-                file_name = os.path.basename(file_in_dir)
-                if file_name in skip_inputs:
-                    continue
-                files.append(os.path.join(file_in_dir))
-            for file_in_dir in glob.glob(os.path.join(file, "*.mp4")):
-                file_name = os.path.basename(file_in_dir)
-                if file_name in skip_inputs:
-                    continue
-                files.append(os.path.join(file_in_dir))
-        else:
-            files.append(os.path.join(file))
-    file_count = len(files)
-    if file_count > 1:
-        if not output_is_dir:
-            print(
-                "error: output path must be a directory when there are more than one input files")
-            sys.exit(-2)
-    elif file_count == 0:
-        print("error: no valid input media files found")
-        sys.exit(-2)
-    else:
-        clear()
-        if output_is_dir:
-            new_outname = os.path.join(outname, "out.mkv")
-            out_name_index = 1
-            while os.path.exists(new_outname):
-                new_outname = os.path.join(outname, "out-{0}.mkv"
-                                           .format(str(out_name_index)))
-                out_name_index = out_name_index + 1
-            outname = new_outname
-        remove_audio_and_subs(files[0], softsubs, softaudio)
+        remove_audio_and_subs(input_files[0], softsubs, softaudio)
         clear()
 
     # Select encoder
@@ -361,14 +312,14 @@ Would you like to overwrite the input files?'''.format(
 
     return start_encoding(codec, encoder, width, height, shader_path, ten_bit,
                           language, softsubs, softaudio, skip_menus,
-                          exit_on_cancel, outname, files)
+                          exit_on_cancel, input_files, outname)
 
 
 def start_encoding(codec: str, encoder: str, width: int, height: int,
                    shader_path: str, ten_bit: bool, language: str,
                    softsubs: bool, softaudio: bool, skip_menus: dict,
-                   exit_on_cancel: bool, outname: str,
-                   files: "list[str]") -> dict:
+                   exit_on_cancel: bool, files: "list[str]",
+                   outname: str) -> dict:
     """
     Start the encoding of input file(s) to the specified encoding using the CPU.
     """
