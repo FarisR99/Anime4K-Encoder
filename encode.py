@@ -7,7 +7,8 @@ from simple_term_menu import TerminalMenu
 from utils import current_date, is_tool, clear
 
 
-def encode_to_hevc(input_files: "list[str]", out: str, skip_menus: dict):
+def encode_to_hevc(input_files: "list[str]", out: str,
+                   skip_menus: dict) -> dict:
     """
     Encode a media file to HEVC using X265
 
@@ -15,6 +16,8 @@ def encode_to_hevc(input_files: "list[str]", out: str, skip_menus: dict):
         input_files: list of input media file paths
         out: output path
         skip_menus: menu skipping options passed from command line
+    Returns:
+        a mapping of successfully encoded input files to their output paths
     """
 
     param_line = "crf=18.0:limit-sao=1:bframes=8:aq-mode=3:psy-rd=1.0"
@@ -82,6 +85,8 @@ def encode_to_hevc(input_files: "list[str]", out: str, skip_menus: dict):
         'bt709'
     ]
 
+    encoded_files = {}
+
     file_count = len(input_files)
     start_time = current_date()
     print("Encoding start time: " + start_time)
@@ -97,15 +102,15 @@ def encode_to_hevc(input_files: "list[str]", out: str, skip_menus: dict):
         output_path = None
         if file_count == 1 and not os.path.isdir(out):
             output_path = os.path.join(out)
-        if output_path is None:
+        else:
             name = f.split("/")
             name = name[len(name) - 1]
-            cmd.append(os.path.join(out, name + "-encoded.mkv"))
-        else:
-            cmd.append(output_path)
+            output_path = os.path.join(out, name + "-encoded.mkv")
+        cmd.append(output_path)
 
+        return_code = -1
         try:
-            subprocess.call(cmd)
+            return_code = subprocess.call(cmd)
         except KeyboardInterrupt:
             print("Cancelled encoding for file={0}".format(f))
             print("Exiting program...")
@@ -113,6 +118,10 @@ def encode_to_hevc(input_files: "list[str]", out: str, skip_menus: dict):
                 sys.exit(-1)
             except SystemExit:
                 os._exit(-1)
+        if return_code == 0:
+            encoded_files[f] = output_path
+        else:
+            print("error: failed to encode file={0}".format(f))
         print("Encoding end time for file={0}: {1}".format(
             str(i + 1),
             current_date())
@@ -120,4 +129,6 @@ def encode_to_hevc(input_files: "list[str]", out: str, skip_menus: dict):
         i = i + 1
         clear()
     print("Encoding start time: " + start_time)
+    print("Encoded files: {0}".format(", ".join(encoded_files.keys())))
     print("Encoding end time: " + current_date())
+    return encoded_files
