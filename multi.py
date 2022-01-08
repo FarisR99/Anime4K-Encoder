@@ -38,7 +38,6 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
                            exit_on_cancel=False, outname=outname)
     clear()
     if len(encoded_files) == 0:
-        print()
         print("error: no files encoded, terminating program early...")
         sys.exit(-2)
     else:
