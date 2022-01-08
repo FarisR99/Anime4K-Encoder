@@ -144,7 +144,7 @@ if mode == "audio" or mode == "subs":
         output = ""
     if output != "":
         if not os.path.isdir(output):
-            print("Output directory {0} does not exist".format(output))
+            print("error: output directory {0} does not exist".format(output))
             sys.exit(-2)
         else:
             if not output.endswith("/"):
@@ -160,7 +160,7 @@ elif mode in MODES_SUPPORTING_MULTI_INPUTS:
             print(e)
             sys.exit(-2)
 else:
-    output = args['output']
+    output = args['output'] or "out.mkv"
 
 # Collect input file paths from the input argument(s)
 in_files = []
