@@ -1,4 +1,3 @@
-import glob
 import os
 import subprocess
 import sys
@@ -24,10 +23,12 @@ def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
     """
 
     mode_choice = None
-    if "shader" in skip_menus and skip_menus['shader'] is not None:
+    if "shader" in skip_menus:
         mode_choice = int(skip_menus['shader'])
         if mode_choice < 0 or mode_choice > 5:
             mode_choice = None
+    elif "recommended" in skip_menus and skip_menus['recommended'] == "1":
+        mode_choice = 4
     if mode_choice is None:
         mode_menu = TerminalMenu(
             [
@@ -133,7 +134,7 @@ def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
 
 # Core
 
-def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
+def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool) -> int:
     """
     Remove audio and optionally subtitles from a file.
 
@@ -141,6 +142,8 @@ def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
         fn: media file path
         softsubs: true if subtitles should be removed
         softaudio: true if audio should be removed
+    Returns:
+        return code of the merge process
     """
 
     args = [
@@ -155,7 +158,7 @@ def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
     args.append(fn)
 
     try:
-        subprocess.call(args)
+        return subprocess.call(args)
     except KeyboardInterrupt:
         print("File processing cancelled for file={0}".format(fn))
         shader_cleanup()
@@ -174,15 +177,42 @@ def shader_cleanup():
     os.remove("temp.mkv")
 
 
-def shader(fn: "list[str]", width: int, height: int, shader_path: str,
-           ten_bit: bool,
-           language: str, softsubs: bool, softaudio: bool, skip_menus: dict,
-           outname: str) -> dict:
+def handle_encoding_cancellation(file_name: str, output_file, start_time: str,
+                                 exit: bool):
+    """
+    Handle cancellation during encoding
+
+    Args:
+        file_name: The current file being encoded
+        output_file: The output file to delete
+        start_time: The time the first file began encoding
+        exit: true if the program should terminate
+    """
+
+    print("Cancelled encoding of file={0}".format(file_name))
+    print("Start time: {0}".format(start_time))
+    print("End time: " + current_date())
+    print()
+    print("Deleting temporary files...")
+    shader_cleanup()
+    if output_file is not None:
+        os.remove(output_file)
+    if exit:
+        print("Exiting program...")
+        try:
+            sys.exit(-1)
+        except SystemExit:
+            os._exit(-1)
+
+
+def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
+           ten_bit: bool, language: str, softsubs: bool, softaudio: bool,
+           skip_menus: dict, exit_on_cancel: bool, outname: str) -> dict:
     """
     Select encoding and start the encoding process.
 
     Args:
-        fn: list of input media paths
+        input_files: list of input media paths
         width: output width
         height: output height
         shader_path: path the shaders are located at
@@ -191,6 +221,8 @@ def shader(fn: "list[str]", width: int, height: int, shader_path: str,
         softsubs: true if subtitles should be removed
         softaudio: true if audio should be removed
         skip_menus: menu skipping options passed from command line
+        exit_on_cancel: true if the program should exit when the user cancels
+            during encoding, false if the function call should terminate
         outname: output path
 
     Returns:
@@ -202,41 +234,33 @@ def shader(fn: "list[str]", width: int, height: int, shader_path: str,
             shader_path))
         sys.exit(-2)
 
-    files = []
-    for file in fn:
-        if os.path.isdir(file):
-            for fileInDir in glob.glob(os.path.join(file, "*.mkv")):
-                files.append(os.path.join(fileInDir))
-            for fileInDir in glob.glob(os.path.join(file, "*.mp4")):
-                files.append(os.path.join(fileInDir))
-        else:
-            files.append(os.path.join(file))
-    file_count = len(files)
-    if file_count > 1:
-        if not os.path.isdir(outname):
-            print(
-                "error: output path must be a directory when there are more than one input files")
-            sys.exit(-2)
-    elif file_count == 0:
-        print("error: no valid input media files found")
-        sys.exit(-2)
-    else:
-        clear()
-        if os.path.isdir(outname):
-            outname = os.path.join(outname, "out.mkv")
-        remove_audio_and_subs(files[0], softsubs, softaudio)
+    output_is_dir = os.path.isdir(outname)
+    if len(input_files) == 1:
+        if output_is_dir:
+            new_outname = os.path.join(outname, "out.mkv")
+            out_name_index = 1
+            while os.path.exists(new_outname):
+                new_outname = os.path.join(outname, "out-{0}.mkv"
+                                           .format(str(out_name_index)))
+                out_name_index = out_name_index + 1
+            outname = new_outname
+            output_is_dir = False
+        remove_audio_and_subs(input_files[0], softsubs, softaudio)
         clear()
 
     # Select encoder
     codec = ""
     encoder = ""
 
-    if "encoder" in skip_menus and skip_menus['encoder'] is not None:
+    if "encoder" in skip_menus:
         encoder = skip_menus['encoder']
         if encoder != 'cpu' and encoder != 'nvenc' and encoder != 'amf':
             print("Unsupported encoder: {0}".format(encoder))
             sys.exit(-2)
-    if "codec" in skip_menus and skip_menus['codec'] is not None:
+    if encoder == "":
+        if "recommended" in skip_menus and skip_menus["recommended"] == "1":
+            encoder = "cpu"
+    if "codec" in skip_menus:
         codec = skip_menus['codec']
         if codec == 'x264':
             codec = 'h264'
@@ -249,6 +273,9 @@ def shader(fn: "list[str]", width: int, height: int, shader_path: str,
         if codec != 'h264' and codec != 'hevc':
             print("Unsupported codec={0}".format(encoder))
             sys.exit(-2)
+    if codec == "":
+        if "recommended" in skip_menus and skip_menus["recommended"] == "1":
+            codec = "h264"
     if codec == "" or encoder == "":
         cg_menu = TerminalMenu(
             [
@@ -286,58 +313,17 @@ def shader(fn: "list[str]", width: int, height: int, shader_path: str,
             sys.exit(-2)
 
     return start_encoding(codec, encoder, width, height, shader_path, ten_bit,
-                          language, softsubs, softaudio, skip_menus, outname,
-                          files)
-
-
-def handle_encoding_cancellation(file_name: str, output_file, start_time: str):
-    """
-    Handle cancellation during encoding
-
-    Args:
-        file_name: The current file being encoded
-        output_file: The output file to delete
-        start_time: The time the first file began encoding
-    """
-
-    print("Cancelled encoding of file={0}".format(file_name))
-    print("Start time: {0}".format(start_time))
-    print("End time: " + current_date())
-    print()
-    print("Deleting temporary files...")
-    shader_cleanup()
-    if output_file is not None:
-        os.remove(output_file)
-    print("Exiting program...")
-    try:
-        sys.exit(-1)
-    except SystemExit:
-        os._exit(-1)
+                          language, softsubs, softaudio, skip_menus,
+                          exit_on_cancel, input_files, outname)
 
 
 def start_encoding(codec: str, encoder: str, width: int, height: int,
                    shader_path: str, ten_bit: bool, language: str,
                    softsubs: bool, softaudio: bool, skip_menus: dict,
-                   outname: str, files: "list[str]") -> dict:
+                   exit_on_cancel: bool, files: "list[str]",
+                   outname: str) -> dict:
     """
     Start the encoding of input file(s) to the specified encoding using the CPU.
-
-    Args:
-        codec: h264/hevc
-        encoder: cpu/nvenc/amf
-        width: output width
-        height: output height
-        shader_path: path the shaders are located at
-        ten_bit: true if the input media is a 10 bit source
-        language: optional desired audio track language
-        softsubs: true if subtitles should be removed
-        softaudio: true if audio should be removed
-        skip_menus: menu skipping options passed from command line
-        outname: output path
-        files: list of input media file paths
-
-    Returns:
-        mapping of files that were successfully encoded to their output paths
     """
 
     clear()
@@ -365,10 +351,12 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
         elif encoder == "nvenc":
             codec_presets = ["fast", "medium", "slow", "lossless"]
         codec_preset = None
-        if "preset" in skip_menus and skip_menus['preset'] is not None:
+        if "preset" in skip_menus:
             codec_preset = skip_menus['preset']
             if codec_preset not in codec_presets:
                 codec_preset = None
+        elif "recommended" in skip_menus and skip_menus["recommended"] == "1":
+            codec_preset = "fast"
         if codec_preset is None:
             selected_codec_preset = TerminalMenu(codec_presets,
                                                  title="Choose Encoder Preset:").show()
@@ -380,7 +368,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
 
     comp_level = ""
     if encoder == "cpu":
-        if "crf" in skip_menus and skip_menus['crf'] is not None:
+        if "crf" in skip_menus:
             crf = int(skip_menus['crf'])
             if 0 <= crf <= 51:
                 comp_level = str(crf)
@@ -388,6 +376,8 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 comp_level = "23"
                 print("Invalid crf provided, using default crf={0}".format(
                     comp_level))
+        elif "recommended" in skip_menus and skip_menus["recommended"] == "1":
+            comp_level = "23"
         else:
             comp_level = input(
                 "Insert compression factor (CRF) 0-51\n0 = Lossless | 23 = Default | 51 = Highest compression\n"
@@ -395,7 +385,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             if comp_level == "" or comp_level is None:
                 comp_level = "23"
     elif encoder == "nvenc" or encoder == "amf":
-        if "qp" in skip_menus and skip_menus['qp'] is not None:
+        if "qp" in skip_menus:
             qp = int(skip_menus['qp'])
             if 0 <= qp <= 51:
                 comp_level = str(qp)
@@ -403,6 +393,8 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 comp_level = "24"
                 print("Invalid qp provided, using default qp={0}".format(
                     comp_level))
+        elif "recommended" in skip_menus and skip_menus["recommended"] == "1":
+            comp_level = "24"
         else:
             comp_level = input(
                 "Insert Quantization Parameter (QP) 0-51\n0 = Lossless | 24 = Default | 51 = Highest compression\n"
@@ -505,7 +497,9 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 encoding_args + ['--o=' + outname, "temp.mkv"]
             )
         except KeyboardInterrupt:
-            handle_encoding_cancellation(files[0], outname, start_time)
+            handle_encoding_cancellation(files[0], outname, start_time,
+                                         exit_on_cancel)
+            return successful_encodes
         print("End time: " + current_date())
         os.remove("temp.mkv")
         print()
@@ -524,7 +518,15 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             name = name[len(name) - 1]
             remove_audio_and_subs(f, softsubs, softaudio)
             clear()
-            print("Files: {0}".format(files_string))
+            print("Encoded files: {0}".format(
+                ", ".join(successful_encodes.keys())))
+            print("Remaining files: {0}".format(", ".join(
+                [
+                    item for item in files
+                    if
+                    item not in failed_files and item not in successful_encodes
+                ]
+            )))
             print("Start time: {0}".format(start_time))
             print("Start time for file={0}: {1}".format(str(i + 1),
                                                         current_date()))
@@ -538,7 +540,10 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                     "temp.mkv"
                 ])
             except KeyboardInterrupt:
-                handle_encoding_cancellation(f, output_path, start_time)
+                handle_encoding_cancellation(f, output_path, start_time,
+                                             exit_on_cancel)
+                return successful_encodes
+
             if return_code != 0:
                 failed_files.append(f)
             else:

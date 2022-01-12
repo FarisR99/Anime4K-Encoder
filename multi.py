@@ -5,9 +5,10 @@ from extract_audio import extract_audio
 from extract_subs import extract_subs
 from mux import clean_up, mux
 from shader import shader
+from utils import clear
 
 
-def multi(fn: "list[str]", width: int, height: int, shader_path: str,
+def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
           ten_bit: bool, skip_menus: dict, del_failures: bool, outname: str):
     """
     Run mode shader on the input files, then for each file successfully
@@ -16,7 +17,7 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
     extracted subs and audio track files.
 
     Args:
-        fn: list of input files
+        input_files: list of input media files
         width: desired width of video
         height: desired height of video
         shader_path: path where the shaders are located
@@ -30,15 +31,17 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
 
     if skip_menus is None:
         skip_menus = {}
-    encoded_files = shader(fn=fn, width=width, height=height,
-                           shader_path=shader_path,
-                           ten_bit=ten_bit, language="", softsubs=True,
-                           softaudio=True,
-                           skip_menus=skip_menus, outname=outname)
+    encoded_files = shader(input_files=input_files, width=width, height=height,
+                           shader_path=shader_path, ten_bit=ten_bit,
+                           language="", softsubs=True,
+                           softaudio=True, skip_menus=skip_menus,
+                           exit_on_cancel=False, outname=outname)
+    clear()
     if len(encoded_files) == 0:
-        print()
         print("error: no files encoded, terminating program early...")
         sys.exit(-2)
+    else:
+        print("Encoded files: {0}".format(", ".join(encoded_files.keys())))
 
     successful_inputs = {}
     failed_inputs = []
@@ -59,7 +62,7 @@ def multi(fn: "list[str]", width: int, height: int, shader_path: str,
             continue
         print()
         print("Starting mode audio for input={0}".format(input_path))
-        if not extract_audio(input_path, ""):
+        if not extract_audio(input_path, "", skip_menus):
             print(
                 "Failed to extract audio for file={0}".format(input_path)
             )
