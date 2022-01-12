@@ -134,7 +134,7 @@ def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
 
 # Core
 
-def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
+def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool) -> int:
     """
     Remove audio and optionally subtitles from a file.
 
@@ -142,6 +142,8 @@ def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
         fn: media file path
         softsubs: true if subtitles should be removed
         softaudio: true if audio should be removed
+    Returns:
+        return code of the merge process
     """
 
     args = [
@@ -156,7 +158,7 @@ def remove_audio_and_subs(fn: str, softsubs: bool, softaudio: bool):
     args.append(fn)
 
     try:
-        subprocess.call(args)
+        return subprocess.call(args)
     except KeyboardInterrupt:
         print("File processing cancelled for file={0}".format(fn))
         shader_cleanup()
@@ -233,16 +235,16 @@ def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
         sys.exit(-2)
 
     output_is_dir = os.path.isdir(outname)
-    if len(input_files) == 1 and output_is_dir:
-        new_outname = os.path.join(outname, "out.mkv")
-        out_name_index = 1
-        while os.path.exists(new_outname):
-            new_outname = os.path.join(outname, "out-{0}.mkv"
-                                       .format(str(out_name_index)))
-            out_name_index = out_name_index + 1
-        outname = new_outname
-        output_is_dir = False
-
+    if len(input_files) == 1:
+        if output_is_dir:
+            new_outname = os.path.join(outname, "out.mkv")
+            out_name_index = 1
+            while os.path.exists(new_outname):
+                new_outname = os.path.join(outname, "out-{0}.mkv"
+                                           .format(str(out_name_index)))
+                out_name_index = out_name_index + 1
+            outname = new_outname
+            output_is_dir = False
         remove_audio_and_subs(input_files[0], softsubs, softaudio)
         clear()
 
