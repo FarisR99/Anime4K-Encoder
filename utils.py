@@ -52,16 +52,8 @@ def lang_long_to_short(lang: str) -> str:
 
 
 def lang_short_to_long(lang: str) -> str:
-    if lang == "eng":
-        return "English"
-    elif lang == "jpn" or lang == "jap" or lang == "ja":
-        return "Japanese"
-    elif lang == "fra":
-        return "French"
-    elif lang == "ger":
-        return "German"
-    elif lang == "kor":
-        return "Korean"
+    if lang in language_mapping:
+        return language_mapping[lang]
     else:
         return "Unknown"
 
@@ -74,6 +66,9 @@ language_mapping = {
     "jpn": "Japanese",
     "ger": "German",
     "kor": "Korean",
+    "por": "Portuguese",
+    "spa": "Spanish",
+    "ita": "Italian"
 }
 
 

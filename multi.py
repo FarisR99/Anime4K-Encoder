@@ -48,7 +48,13 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
     for input_path, output_path in encoded_files.items():
         print()
         print("Starting mode subs for input={0}".format(input_path))
-        if not extract_subs(input_path, ""):
+        extracted_subs = False
+        try:
+            extracted_subs = extract_subs(input_path, "")
+        except Exception as ex:
+            print(ex)
+            extracted_subs = False
+        if not extracted_subs:
             print(
                 "Failed to extract subtitles for file={0}".format(input_path)
             )
@@ -60,9 +66,16 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
                 print("Skipping...")
             failed_inputs.append(input_path)
             continue
+
         print()
         print("Starting mode audio for input={0}".format(input_path))
-        if not extract_audio(input_path, "", skip_menus):
+        extracted_audio = False
+        try:
+            extracted_audio = extract_audio(input_path, "", skip_menus)
+        except Exception as ex:
+            print(ex)
+            extracted_audio = False
+        if not extracted_audio:
             print(
                 "Failed to extract audio for file={0}".format(input_path)
             )

@@ -7,7 +7,7 @@ import time
 from pymkv import MKVFile
 from simple_term_menu import TerminalMenu
 
-from utils import current_date, language_mapping
+from utils import current_date, language_mapping, lang_short_to_long
 
 
 def extract_audio(fn: str, out_dir: str, skip_menus: dict) -> bool:
@@ -35,7 +35,9 @@ def extract_audio(fn: str, out_dir: str, skip_menus: dict) -> bool:
     for track in tracks:
         if track.track_type == 'audio':
             ext = track._track_codec
-            lang = language_mapping[track._language]
+            if track._language not in language_mapping:
+                continue;
+            lang = lang_short_to_long(track._language)
             id = str(track._track_id)
             return_code = -1
             try:
