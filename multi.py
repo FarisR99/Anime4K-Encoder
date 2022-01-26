@@ -38,6 +38,8 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
 
     for input_file in input_files:
         clear()
+        print("Completed files: {0}".format(", ".join(successful_inputs)))
+        print()
         encoded_files = shader(input_files=[input_file], width=width,
                                height=height,
                                shader_path=shader_path, ten_bit=ten_bit,
@@ -53,7 +55,8 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
         output_path = encoded_files[input_file]
         clear()
 
-        print("Encoded file: {0}".format(input_file))
+        print("Completed files: {0}".format(", ".join(successful_inputs)))
+        print("Successfully encoded file: {0}".format(input_file))
         print()
         print("Starting mode subs for input={0}".format(input_file))
         extracted_subs = False
@@ -123,7 +126,6 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
         successful_inputs[input_file] = new_output
 
     clear()
-    print()
 
     if len(successful_inputs) > 0:
         print(
