@@ -46,6 +46,7 @@ def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
         if mode_choice is None:
             print("Canceling")
             sys.exit(-1)
+    skip_menus['shader'] = str(mode_choice)
 
     if mode_choice == 0:
         s = os.path.join(shader_path, Clamp_Highlights)
@@ -245,6 +246,7 @@ def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
                 out_name_index = out_name_index + 1
             outname = new_outname
             output_is_dir = False
+        clear()
         remove_audio_and_subs(input_files[0], softsubs, softaudio)
         clear()
 
@@ -311,6 +313,8 @@ def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
             print("Cancelled")
             shader_cleanup()
             sys.exit(-2)
+    skip_menus['codec'] = codec
+    skip_menus['encoder'] = encoder
 
     return start_encoding(codec, encoder, width, height, shader_path, ten_bit,
                           language, softsubs, softaudio, skip_menus,
@@ -365,6 +369,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
                 shader_cleanup()
                 sys.exit(-1)
             codec_preset = codec_presets[selected_codec_preset]
+        skip_menus['preset'] = codec_preset
 
     comp_level = ""
     if encoder == "cpu":
@@ -384,6 +389,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             )
             if comp_level == "" or comp_level is None:
                 comp_level = "23"
+        skip_menus['crf'] = comp_level
     elif encoder == "nvenc" or encoder == "amf":
         if "qp" in skip_menus:
             qp = int(skip_menus['qp'])
@@ -401,6 +407,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             )
             if comp_level == "" or comp_level is None:
                 comp_level = "24"
+        skip_menus['qp'] = comp_level
 
     # Print Info
     files_string = ", ".join(files)

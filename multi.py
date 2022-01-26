@@ -1,5 +1,4 @@
 import os
-import sys
 
 from extract_audio import extract_audio
 from extract_subs import extract_subs
@@ -31,32 +30,41 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
 
     if skip_menus is None:
         skip_menus = {}
-    encoded_files = shader(input_files=input_files, width=width, height=height,
-                           shader_path=shader_path, ten_bit=ten_bit,
-                           language="", softsubs=True,
-                           softaudio=True, skip_menus=skip_menus,
-                           exit_on_cancel=False, outname=outname)
-    clear()
-    if len(encoded_files) == 0:
-        print("error: no files encoded, terminating program early...")
-        sys.exit(-2)
-    else:
-        print("Encoded files: {0}".format(", ".join(encoded_files.keys())))
 
+    successful_encoded_inputs = []
+    failed_encoded_inputs = []
     successful_inputs = {}
     failed_inputs = []
-    for input_path, output_path in encoded_files.items():
+
+    for input_file in input_files:
+        clear()
+        encoded_files = shader(input_files=[input_file], width=width,
+                               height=height,
+                               shader_path=shader_path, ten_bit=ten_bit,
+                               language="", softsubs=True,
+                               softaudio=True, skip_menus=skip_menus,
+                               exit_on_cancel=False, outname=outname)
+        if input_file not in encoded_files:
+            print("error: failed to encode, skipping input file={0}".format(
+                input_file))
+            failed_encoded_inputs.append(input_file)
+            continue
+        successful_encoded_inputs.append(input_file)
+        output_path = encoded_files[input_file]
+        clear()
+
+        print("Encoded file: {0}".format(input_file))
         print()
-        print("Starting mode subs for input={0}".format(input_path))
+        print("Starting mode subs for input={0}".format(input_file))
         extracted_subs = False
         try:
-            extracted_subs = extract_subs(input_path, "")
+            extracted_subs = extract_subs(input_file, "")
         except Exception as ex:
             print(ex)
             extracted_subs = False
         if not extracted_subs:
             print(
-                "Failed to extract subtitles for file={0}".format(input_path)
+                "Failed to extract subtitles for file={0}".format(input_file)
             )
             clean_up()
             if del_failures:
@@ -64,20 +72,20 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
                 os.remove(output_path)
             else:
                 print("Skipping...")
-            failed_inputs.append(input_path)
+            failed_inputs.append(input_file)
             continue
 
         print()
-        print("Starting mode audio for input={0}".format(input_path))
+        print("Starting mode audio for input={0}".format(input_file))
         extracted_audio = False
         try:
-            extracted_audio = extract_audio(input_path, "", skip_menus)
+            extracted_audio = extract_audio(input_file, "", skip_menus)
         except Exception as ex:
             print(ex)
             extracted_audio = False
         if not extracted_audio:
             print(
-                "Failed to extract audio for file={0}".format(input_path)
+                "Failed to extract audio for file={0}".format(input_file)
             )
             clean_up()
             if del_failures:
@@ -86,7 +94,7 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
             else:
                 print("Skipping...")
             clean_up()
-            failed_inputs.append(input_path)
+            failed_inputs.append(input_file)
             continue
         print()
 
@@ -106,13 +114,15 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
                 os.remove(output_path)
             else:
                 print("Skipping...")
-            failed_inputs.append(input_path)
+            failed_inputs.append(input_file)
             continue
         os.remove(output_path)
         os.rename(new_output, output_path)
         new_output = output_path
         print("Successfully compiled file={0}".format(new_output))
-        successful_inputs[input_path] = new_output
+        successful_inputs[input_file] = new_output
+
+    clear()
     print()
 
     if len(successful_inputs) > 0:
@@ -120,9 +130,13 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
             "All of the following input files have been encoded and compiled:")
         for input_path, output_path in successful_inputs.items():
             print(" {0} => {1}".format(input_path, output_path))
+    if len(failed_encoded_inputs) > 0:
+        print()
+        print("Failed to encode the following input files:")
+        print("\n".join(failed_encoded_inputs))
     if len(failed_inputs) > 0:
         print()
-        if len(failed_inputs) == len(encoded_files):
+        if len(failed_inputs) == len(successful_encoded_inputs):
             print("Failed to compile all encoded input files.")
         else:
             print("Failed to compile the following encoded input files:")
