@@ -39,14 +39,8 @@ def current_date() -> str:
 
 
 def lang_long_to_short(lang: str) -> str:
-    if lang == 'English':
-        return "eng"
-    elif lang == 'Japanese':
-        return "jpn"
-    elif lang == 'German':
-        return "ger"
-    elif lang == 'Korean':
-        return "kor"
+    if lang in reversed_lang_mapping:
+        return reversed_lang_mapping[lang]
     else:
         return "und"
 
@@ -68,7 +62,23 @@ language_mapping = {
     "kor": "Korean",
     "por": "Portuguese",
     "spa": "Spanish",
-    "ita": "Italian"
+    "ita": "Italian",
+    "pol": "Polish",
+    "hin": "Hindi",
+    "chi": "Chinese"
+}
+
+reversed_lang_mapping = {
+    "English": "eng",
+    "Japanese": "jpn",
+    "German": "ger",
+    "Korean": "kor",
+    "Portuguese": "por",
+    "Spanish": "spa",
+    "Italian": "ita",
+    "Polish": "pol",
+    "Hindi": "hin",
+    "Chinese": "chi"
 }
 
 
