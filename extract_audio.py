@@ -10,6 +10,33 @@ from simple_term_menu import TerminalMenu
 from utils import current_date, language_mapping, lang_short_to_long
 
 
+def show_convert_audio_menu(skip_menus: dict) -> int:
+    convert_choice = None
+    if "convert" in skip_menus:
+        convert_choice = int(skip_menus['convert'])
+        if convert_choice < 0 or convert_choice > 1:
+            convert_choice = None
+        else:
+            # Flip the value, because "1" in the command line arg means
+            # "Yes" which is at index 0 in convert_menu choice array
+            convert_choice = 1 - convert_choice
+    if convert_choice is None \
+            and "recommended" in skip_menus \
+            and skip_menus["recommended"] == "1":
+        convert_choice = 1
+    if convert_choice is None:
+        convert_menu = TerminalMenu(
+            ["Yes", "No"],
+            title="Do you want to convert every FLAC to Opus?"
+        )
+        convert_choice = convert_menu.show()
+        if convert_choice is None:
+            print("Cancelled conversion")
+            convert_choice = 1
+    skip_menus['convert'] = str(1 - convert_choice)
+    return convert_choice
+
+
 def extract_audio(fn: str, out_dir: str, skip_menus: dict) -> bool:
     """
     Extract audio from a media file.
@@ -36,7 +63,7 @@ def extract_audio(fn: str, out_dir: str, skip_menus: dict) -> bool:
         if track.track_type == 'audio':
             ext = track._track_codec
             if track._language not in language_mapping:
-                continue;
+                continue
             lang = lang_short_to_long(track._language)
             id = str(track._track_id)
             return_code = -1
@@ -62,24 +89,7 @@ def extract_audio(fn: str, out_dir: str, skip_menus: dict) -> bool:
     for file in glob.glob(out_dir + "*.FLAC"):
         flacs.append(file)
     if len(flacs) > 0:
-        convert_choice = None
-        if "convert" in skip_menus:
-            convert_choice = int(skip_menus['convert'])
-            if convert_choice < 0 or convert_choice > 1:
-                convert_choice = None
-            else:
-                # Flip the value, because "1" in the command line arg means
-                # "Yes" which is at index 0 in convert_menu choice array
-                convert_choice = 1 - convert_choice
-        if convert_choice is None:
-            convert_menu = TerminalMenu(
-                ["Yes", "No"],
-                title="Do you want to convert every FLAC to Opus?"
-            )
-            convert_choice = convert_menu.show()
-            if convert_choice is None:
-                print("Cancelled conversion")
-
+        convert_choice = show_convert_audio_menu(skip_menus)
         if convert_choice == 0:
             print("Conversion start time: " + current_date())
             for f in flacs:

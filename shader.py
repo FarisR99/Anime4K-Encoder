@@ -238,7 +238,8 @@ def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
     output_is_dir = os.path.isdir(outname)
     if len(input_files) == 1:
         if output_is_dir:
-            new_outname = os.path.join(outname, "out.mkv")
+            new_outname = os.path.join(outname,
+                                       os.path.basename(input_files[0]))
             out_name_index = 1
             while os.path.exists(new_outname):
                 new_outname = os.path.join(outname, "out-{0}.mkv"
@@ -525,12 +526,14 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             name = name[len(name) - 1]
             remove_audio_and_subs(f, softsubs, softaudio)
             clear()
-            print("Encoded files: {0}".format(
-                os.linesep.join(successful_encodes.keys())))
+            print("Encoded files:\n {0}".format("\n ".join(
+                [os.path.basename(successful_encode) for successful_encode in
+                 successful_encodes.keys()]
+            )))
             print()
-            print("Remaining files: {0}".format(os.linesep.join(
+            print("Remaining files:\n {0}".format("\n ".join(
                 [
-                    item for item in files
+                    os.path.basename(item) for item in files
                     if
                     item not in failed_files and item not in successful_encodes
                 ]

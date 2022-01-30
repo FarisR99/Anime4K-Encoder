@@ -1,6 +1,6 @@
 import os
 
-from extract_audio import extract_audio
+from extract_audio import extract_audio, show_convert_audio_menu
 from extract_subs import extract_subs
 from mux import clean_up, mux
 from shader import shader
@@ -36,10 +36,18 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
     successful_inputs = {}
     failed_inputs = []
 
+    clear()
+    show_convert_audio_menu(skip_menus)
+
     for input_file in input_files:
         clear()
-        print("Completed files: {0}".format(", ".join(successful_inputs)))
-        print()
+        if len(successful_inputs) > 0:
+            print("Completed files:\n {0}".format("\n ".join(
+                [os.path.basename(successful_input) for successful_input in
+                 successful_inputs]
+            )))
+            print()
+
         encoded_files = shader(input_files=[input_file], width=width,
                                height=height,
                                shader_path=shader_path, ten_bit=ten_bit,
@@ -135,11 +143,11 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
     if len(failed_encoded_inputs) > 0:
         print()
         print("Failed to encode the following input files:")
-        print("\n".join(failed_encoded_inputs))
+        print(" " + "\n ".join(failed_encoded_inputs))
     if len(failed_inputs) > 0:
         print()
         if len(failed_inputs) == len(successful_encoded_inputs):
             print("Failed to compile all encoded input files.")
         else:
             print("Failed to compile the following encoded input files:")
-            print("\n".join(failed_inputs))
+            print(" " + "\n ".join(failed_inputs))
