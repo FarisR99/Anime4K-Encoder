@@ -6,6 +6,11 @@ from pymkv import MKVFile, MKVTrack
 
 from utils import current_date, lang_long_to_short, lang_short_to_long
 
+audio_file_extensions = [
+    "AAC", "MP3", "DTS", "Opus", "FLAC", "TrueHD Atmos",
+    "AC-3", "E-AC-3", "DTS-HD Master Audio"
+]
+
 
 def addAudio(source, ext: str):
     """
@@ -60,14 +65,8 @@ def delete_by_extension(ext: str):
 
 
 def clean_up():
-    delete_by_extension("AAC")
-    delete_by_extension("MP3")
-    delete_by_extension("DTS")
-    delete_by_extension("Opus")
-    delete_by_extension("FLAC")
-    delete_by_extension("TrueHD Atmos")
-    delete_by_extension("AC-3")
-    delete_by_extension("DTS-HD Master Audio")
+    for audio_file_ext in audio_file_extensions:
+        delete_by_extension(audio_file_ext)
 
     delete_by_extension("sup")
     delete_by_extension("srt")
@@ -87,14 +86,8 @@ def mux(fn: str, out: str):
 
     mkv = MKVFile(fn)
 
-    addAudio(mkv, "AAC")
-    addAudio(mkv, "MP3")
-    addAudio(mkv, "DTS")
-    addAudio(mkv, "Opus")
-    addAudio(mkv, "FLAC")
-    addAudio(mkv, "TrueHD Atmos")
-    addAudio(mkv, "AC-3")
-    addAudio(mkv, "DTS-HD Master Audio")
+    for audio_file_ext in audio_file_extensions:
+        addAudio(mkv, audio_file_ext)
 
     addSubs(mkv, "sup")
     addSubs(mkv, "srt")
