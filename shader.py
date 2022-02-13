@@ -450,7 +450,7 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
     if language is not None and language != "":
         encoding_args.append("--alang=" + str(language))
     if desired_fps is not None and desired_fps > 0:
-        encoding_args.append("--ofps=" + str(desired_fps))
+        encoding_args.append("--vf=fps=" + str(desired_fps))
 
     # Arguments specific to the encoding and encoder specified
     if encoder == "cpu":
