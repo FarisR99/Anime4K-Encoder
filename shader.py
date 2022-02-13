@@ -351,7 +351,7 @@ def start_encoding(debug: bool, codec: str, encoder: str, width: int,
         format = "vaapi_vld"
 
     # Open shaders menu
-    str_shaders = menu_fhd_shaders(shader_path, skip_menus)
+    str_shaders = menu_fhd_shaders(debug, shader_path, skip_menus)
     if not debug:
         clear()
 
