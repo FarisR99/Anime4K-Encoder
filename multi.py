@@ -37,11 +37,15 @@ def multi(debug: bool, input_files: "list[str]", width: int, height: int,
     successful_inputs = {}
     failed_inputs = []
 
-    clear()
+    if not debug:
+        clear()
     show_convert_audio_menu(debug, skip_menus)
 
     for input_file in input_files:
-        clear()
+        if not debug:
+            clear()
+        else:
+            print()
         if len(successful_inputs) > 0:
             print("Completed files:\n {0}".format("\n ".join(
                 [os.path.basename(successful_input) for successful_input in
@@ -63,7 +67,10 @@ def multi(debug: bool, input_files: "list[str]", width: int, height: int,
             continue
         successful_encoded_inputs.append(input_file)
         output_path = encoded_files[input_file]
-        clear()
+        if not debug:
+            clear()
+        else:
+            print()
 
         print("Completed files: {0}".format(", ".join(successful_inputs)))
         print("Successfully encoded file: {0}".format(input_file))
@@ -118,7 +125,7 @@ def multi(debug: bool, input_files: "list[str]", width: int, height: int,
             mux(debug, output_path, new_output)
         except Exception as e:
             print("Failed to mux file={0}".format(output_path))
-            print(ccolors.FAIL + e)
+            print(str(ccolors.FAIL) + str(e))
             if os.path.isfile(new_output):
                 print("Deleting compiled file={0}".format(new_output))
                 os.remove(new_output)
@@ -137,6 +144,8 @@ def multi(debug: bool, input_files: "list[str]", width: int, height: int,
 
     if not debug:
         clear()
+    else:
+        print()
 
     if len(successful_inputs) > 0:
         print(

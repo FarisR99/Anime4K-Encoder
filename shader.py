@@ -252,9 +252,13 @@ def shader(debug: bool, input_files: "list[str]", width: int, height: int,
                 out_name_index = out_name_index + 1
             outname = new_outname
             output_is_dir = False
-        clear()
+        if not debug:
+            clear()
         remove_audio_and_subs(input_files[0], softsubs, softaudio)
-        clear()
+        if not debug:
+            clear()
+        else:
+            print()
 
     # Select encoder
     codec = ""
@@ -354,6 +358,8 @@ def start_encoding(debug: bool, codec: str, encoder: str, width: int,
     str_shaders = menu_fhd_shaders(debug, shader_path, skip_menus)
     if not debug:
         clear()
+    else:
+        print()
 
     # Select Codec Presets
     if encoder == "cpu" or encoder == "nvenc":
@@ -442,6 +448,8 @@ def start_encoding(debug: bool, codec: str, encoder: str, width: int,
     time.sleep(3)
     if not debug:
         clear()
+    else:
+        print()
 
     # Encode
     encoding_args = [
