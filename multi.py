@@ -1,5 +1,6 @@
 import os
 
+from ccolors import ccolors
 from extract_audio import extract_audio, show_convert_audio_menu
 from extract_subs import extract_subs
 from mux import clean_up, mux
@@ -117,7 +118,7 @@ def multi(debug: bool, input_files: "list[str]", width: int, height: int,
             mux(debug, output_path, new_output)
         except Exception as e:
             print("Failed to mux file={0}".format(output_path))
-            print(e)
+            print(ccolors.FAIL + e)
             if os.path.isfile(new_output):
                 print("Deleting compiled file={0}".format(new_output))
                 os.remove(new_output)
