@@ -76,6 +76,8 @@ parser.add_argument("-sa", "--softaudio", required=False,
                     action='store_true',
                     default=False,
                     help="Set this flag if you want to manually mux audio when using mode shader")
+parser.add_argument("-fps", "--fps", required=False, type=float,
+                    help="Desired framerate when applying shader")
 parser.add_argument("-sm", "--skip_menus", required=False, type=str2dict,
                     help='''Skip choice menus
 Examples for mode shader:
@@ -221,10 +223,11 @@ elif mode == "mux":
 elif mode == "shader":
     shader(in_files, args['width'], args['height'],
            args['shader_dir'], args['bit'], args['audio_language'],
-           args['softsubs'], args['softaudio'], skip_menus, True, output)
+           args['softsubs'], args['softaudio'], args['fps'], skip_menus, True,
+           output)
 elif mode == "multi":
     multi(in_files, args['width'], args['height'],
-          args['shader_dir'], args['bit'], skip_menus,
+          args['shader_dir'], args['bit'], args['fps'], skip_menus,
           args['delete_failures'], output)
 elif mode == "encode":
     encode_to_hevc(in_files, output, skip_menus)

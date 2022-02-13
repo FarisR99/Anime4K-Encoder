@@ -208,7 +208,8 @@ def handle_encoding_cancellation(file_name: str, output_file, start_time: str,
 
 def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
            ten_bit: bool, language: str, softsubs: bool, softaudio: bool,
-           skip_menus: dict, exit_on_cancel: bool, outname: str) -> dict:
+           desired_fps: float, skip_menus: dict, exit_on_cancel: bool,
+           outname: str) -> dict:
     """
     Select encoding and start the encoding process.
 
@@ -221,6 +222,7 @@ def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
         language: optional desired audio track language
         softsubs: true if subtitles should be removed
         softaudio: true if audio should be removed
+        desired_fps: output framerate
         skip_menus: menu skipping options passed from command line
         exit_on_cancel: true if the program should exit when the user cancels
             during encoding, false if the function call should terminate
@@ -319,13 +321,13 @@ def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
 
     return start_encoding(codec, encoder, width, height, shader_path, ten_bit,
                           language, softsubs, softaudio, skip_menus,
-                          exit_on_cancel, input_files, outname)
+                          desired_fps, exit_on_cancel, input_files, outname)
 
 
 def start_encoding(codec: str, encoder: str, width: int, height: int,
                    shader_path: str, ten_bit: bool, language: str,
-                   softsubs: bool, softaudio: bool, skip_menus: dict,
-                   exit_on_cancel: bool, files: "list[str]",
+                   softsubs: bool, softaudio: bool, desired_fps: float,
+                   skip_menus: dict, exit_on_cancel: bool, files: "list[str]",
                    outname: str) -> dict:
     """
     Start the encoding of input file(s) to the specified encoding using the CPU.
@@ -447,6 +449,8 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
     ]
     if language is not None and language != "":
         encoding_args.append("--alang=" + str(language))
+    if desired_fps is not None and desired_fps > 0:
+        encoding_args.append("--ofps=" + str(desired_fps))
 
     # Arguments specific to the encoding and encoder specified
     if encoder == "cpu":

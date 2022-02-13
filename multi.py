@@ -8,7 +8,8 @@ from utils import clear
 
 
 def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
-          ten_bit: bool, skip_menus: dict, del_failures: bool, outname: str):
+          ten_bit: bool, desired_fps: float, skip_menus: dict,
+          del_failures: bool, outname: str):
     """
     Run mode shader on the input files, then for each file successfully
     encoded with shaders applied, run extract audio and extract subs on
@@ -21,6 +22,7 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
         height: desired height of video
         shader_path: path where the shaders are located
         ten_bit: true if the input file(s) are a 10 bit source
+        desired_fps: desired framerate of video
         skip_menus: menu skipping options passed from command line
         del_failures: true if encoded output files should be deleted on failure
         outname: output path
@@ -52,8 +54,9 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
                                height=height,
                                shader_path=shader_path, ten_bit=ten_bit,
                                language="", softsubs=True,
-                               softaudio=True, skip_menus=skip_menus,
-                               exit_on_cancel=False, outname=outname)
+                               softaudio=True, desired_fps=desired_fps,
+                               skip_menus=skip_menus, exit_on_cancel=False,
+                               outname=outname)
         if input_file not in encoded_files:
             print("error: failed to encode, skipping input file={0}".format(
                 input_file))
