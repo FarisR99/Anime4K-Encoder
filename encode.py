@@ -7,7 +7,7 @@ from simple_term_menu import TerminalMenu
 from utils import current_date, is_tool, clear
 
 
-def encode_to_hevc(input_files: "list[str]", out: str,
+def encode_to_hevc(debug: bool, input_files: "list[str]", out: str,
                    skip_menus: dict) -> dict:
     """
     Encode a media file to HEVC using X265
@@ -28,13 +28,18 @@ def encode_to_hevc(input_files: "list[str]", out: str,
         if detail_choice < 0 or detail_choice > 4:
             detail_choice = None
     if detail_choice is None:
-        detail_menu = TerminalMenu([
-            "One setting to rule them all (Recommended if you don't know)",
-            "Flat, slow anime (slice of life, everything is well lit, e.g. Your Name)",
-            "Some dark scenes, some battle scenes (shonen, historical, etc., e.g. Kimetsu no Yaiba)",
-            "[TV Series] Movie-tier dark scene, complex grain/detail (Rarely used)",
-            "[Movie] Movie-tier dark scene, complex grain/detail (Rarely used)",
-        ], title="Choose the encode options")
+        detail_menu = TerminalMenu(
+            [
+                "One setting to rule them all (Recommended if you don't know)",
+                "Flat, slow anime (slice of life, everything is well lit, e.g. Your Name)",
+                "Some dark scenes, some battle scenes (shonen, historical, etc., e.g. Kimetsu no Yaiba)",
+                "[TV Series] Movie-tier dark scene, complex grain/detail (Rarely used)",
+                "[Movie] Movie-tier dark scene, complex grain/detail (Rarely used)",
+            ],
+            title="Choose the encode options",
+            clear_screen=(debug is False),
+            clear_menu_on_exit=(debug is False)
+        )
         detail_choice = detail_menu.show()
         if detail_choice is None:
             print("Cancelled")

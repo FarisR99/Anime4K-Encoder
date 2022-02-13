@@ -32,7 +32,7 @@ def patch(debug: bool, input_files: "list[str]", skip_menus: dict,
 
     if not debug:
         clear()
-    show_convert_audio_menu(skip_menus)
+    show_convert_audio_menu(debug, skip_menus)
 
     for input_file in input_files:
         input_file_name = os.path.basename(input_file)

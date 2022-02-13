@@ -10,7 +10,7 @@ from utils import current_date, clear
 
 # Menus
 
-def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
+def menu_fhd_shaders(debug: bool, shader_path: str, skip_menus: dict) -> str:
     """
     Select a shader for FHD or higher resolution videos.
 
@@ -39,7 +39,9 @@ def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
                 "Mode B+B (RECOMMENDED. High Quality, Minor Artifacts)",
                 "Mode C+A (Low Quality, Minor Artifacts)"
             ],
-            title="Please refer to the Anime4k Wiki for more info and try the\n shaders on mpv beforehand to know what's best for you.\nChoose Shader Preset:"
+            title="Please refer to the Anime4k Wiki for more info and try the\n shaders on mpv beforehand to know what's best for you.\nChoose Shader Preset:",
+            clear_screen=(debug is False),
+            clear_menu_on_exit=(debug is False)
         )
         mode_choice = mode_menu.show()
 
@@ -292,7 +294,9 @@ def shader(debug: bool, input_files: "list[str]", width: int, height: int,
                 "AMD GPU H264 (AMF)",
                 "AMD GPU HEVC (AMF)"
             ],
-            title="Choose Video Codec:"
+            title="Choose Video Codec:",
+            clear_screen=(debug is False),
+            clear_menu_on_exit=(debug is False)
         )
         cg_choice = cg_menu.show()
         if cg_choice == 0:
@@ -368,8 +372,12 @@ def start_encoding(debug: bool, codec: str, encoder: str, width: int,
         elif "recommended" in skip_menus and skip_menus["recommended"] == "1":
             codec_preset = "fast"
         if codec_preset is None:
-            selected_codec_preset = TerminalMenu(codec_presets,
-                                                 title="Choose Encoder Preset:").show()
+            selected_codec_preset = TerminalMenu(
+                codec_presets,
+                title="Choose Encoder Preset:",
+                clear_screen=(debug is False),
+                clear_menu_on_exit=(debug is False)
+            ).show()
             if selected_codec_preset is None:
                 print("Cancelled")
                 shader_cleanup()

@@ -37,7 +37,7 @@ def multi(debug: bool, input_files: "list[str]", width: int, height: int,
     failed_inputs = []
 
     clear()
-    show_convert_audio_menu(skip_menus)
+    show_convert_audio_menu(debug, skip_menus)
 
     for input_file in input_files:
         clear()

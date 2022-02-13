@@ -10,7 +10,7 @@ from simple_term_menu import TerminalMenu
 from utils import current_date, language_mapping, lang_short_to_long
 
 
-def show_convert_audio_menu(skip_menus: dict) -> int:
+def show_convert_audio_menu(debug: bool, skip_menus: dict) -> int:
     convert_choice = None
     if "convert" in skip_menus:
         convert_choice = int(skip_menus['convert'])
@@ -27,7 +27,9 @@ def show_convert_audio_menu(skip_menus: dict) -> int:
     if convert_choice is None:
         convert_menu = TerminalMenu(
             ["Yes", "No"],
-            title="Do you want to convert every FLAC to Opus?"
+            title="Do you want to convert every FLAC to Opus?",
+            clear_screen=(debug is False),
+            clear_menu_on_exit=(debug is False)
         )
         convert_choice = convert_menu.show()
         if convert_choice is None:
@@ -90,7 +92,7 @@ def extract_audio(debug: bool, fn: str, out_dir: str,
     for file in glob.glob(out_dir + "*.FLAC"):
         flacs.append(file)
     if len(flacs) > 0:
-        convert_choice = show_convert_audio_menu(skip_menus)
+        convert_choice = show_convert_audio_menu(debug, skip_menus)
         if convert_choice == 0:
             print("Conversion start time: " + current_date())
             for f in flacs:
@@ -103,7 +105,10 @@ def extract_audio(debug: bool, fn: str, out_dir: str,
                 if br_choice is None:
                     br_menu = TerminalMenu(
                         bit_rates,
-                        title="What's the format of the file? => {0}".format(f)
+                        title="What's the format of the file? => {0}".format(
+                            f),
+                        clear_screen=(debug is False),
+                        clear_menu_on_exit=(debug is False),
                     )
                     br_choice = br_menu.show()
                     if br_choice is None:
