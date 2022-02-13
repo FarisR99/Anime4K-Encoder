@@ -320,8 +320,8 @@ def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
     skip_menus['encoder'] = encoder
 
     return start_encoding(codec, encoder, width, height, shader_path, ten_bit,
-                          language, softsubs, softaudio, skip_menus,
-                          desired_fps, exit_on_cancel, input_files, outname)
+                          language, softsubs, softaudio, desired_fps,
+                          skip_menus, exit_on_cancel, input_files, outname)
 
 
 def start_encoding(codec: str, encoder: str, width: int, height: int,
