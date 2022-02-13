@@ -19,7 +19,7 @@ def genExt(codec):
         return None
 
 
-def extract_subs(fn: str, out_dir: str) -> bool:
+def extract_subs(debug: bool, fn: str, out_dir: str) -> bool:
     """
     Extract subtitles from a media file.
 

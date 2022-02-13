@@ -75,7 +75,7 @@ def clean_up():
     delete_by_extension("sub")
 
 
-def mux(fn: str, out: str):
+def mux(debug: bool, fn: str, out: str):
     """
     Start the muxing process
 
@@ -107,6 +107,7 @@ def mux(fn: str, out: str):
     print("Mux end time: " + current_date())
 
     # Clean up
-    print("\nCleaning...")
+    print()
+    print("Cleaning...")
     clean_up()
     print("Cleaned!")

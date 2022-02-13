@@ -206,7 +206,8 @@ def handle_encoding_cancellation(file_name: str, output_file, start_time: str,
             os._exit(-1)
 
 
-def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
+def shader(debug: bool, input_files: "list[str]", width: int, height: int,
+           shader_path: str,
            ten_bit: bool, language: str, softsubs: bool, softaudio: bool,
            desired_fps: float, skip_menus: dict, exit_on_cancel: bool,
            outname: str) -> dict:
@@ -319,13 +320,13 @@ def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
     skip_menus['codec'] = codec
     skip_menus['encoder'] = encoder
 
-    return start_encoding(codec, encoder, width, height, shader_path, ten_bit,
-                          language, softsubs, softaudio, desired_fps,
+    return start_encoding(debug, codec, encoder, width, height, shader_path,
+                          ten_bit, language, softsubs, softaudio, desired_fps,
                           skip_menus, exit_on_cancel, input_files, outname)
 
 
-def start_encoding(codec: str, encoder: str, width: int, height: int,
-                   shader_path: str, ten_bit: bool, language: str,
+def start_encoding(debug: bool, codec: str, encoder: str, width: int,
+                   height: int, shader_path: str, ten_bit: bool, language: str,
                    softsubs: bool, softaudio: bool, desired_fps: float,
                    skip_menus: dict, exit_on_cancel: bool, files: "list[str]",
                    outname: str) -> dict:
@@ -333,7 +334,8 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
     Start the encoding of input file(s) to the specified encoding using the CPU.
     """
 
-    clear()
+    if not debug:
+        clear()
 
     if ten_bit:
         format = "yuv420p10le"
@@ -346,7 +348,8 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
 
     # Open shaders menu
     str_shaders = menu_fhd_shaders(shader_path, skip_menus)
-    clear()
+    if not debug:
+        clear()
 
     # Select Codec Presets
     if encoder == "cpu" or encoder == "nvenc":
@@ -429,7 +432,8 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
     print("Start time: " + start_time)
     import time
     time.sleep(3)
-    clear()
+    if not debug:
+        clear()
 
     # Encode
     encoding_args = [
@@ -529,7 +533,10 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             name = f.split("/")
             name = name[len(name) - 1]
             remove_audio_and_subs(f, softsubs, softaudio)
-            clear()
+            if not debug:
+                clear()
+            else:
+                print()
             print("Encoded files:\n {0}".format("\n ".join(
                 [os.path.basename(successful_encode) for successful_encode in
                  successful_encodes.keys()]
@@ -567,8 +574,10 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             print("End time for file={0}: {1}".format(str(i + 1),
                                                       current_date()))
             os.remove("temp.mkv")
-            clear()
+            if not debug:
+                clear()
             i = i + 1
+        print()
         print("Files: {0}".format(files_string))
         print("Start time: {0}".format(start_time))
         print("End time: {0}".format(current_date()))

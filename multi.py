@@ -7,9 +7,9 @@ from shader import shader
 from utils import clear
 
 
-def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
-          ten_bit: bool, desired_fps: float, skip_menus: dict,
-          del_failures: bool, outname: str):
+def multi(debug: bool, input_files: "list[str]", width: int, height: int,
+          shader_path: str, ten_bit: bool, desired_fps: float,
+          skip_menus: dict, del_failures: bool, outname: str):
     """
     Run mode shader on the input files, then for each file successfully
     encoded with shaders applied, run extract audio and extract subs on
@@ -26,8 +26,6 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
         skip_menus: menu skipping options passed from command line
         del_failures: true if encoded output files should be deleted on failure
         outname: output path
-    Returns:
-
     """
 
     if skip_menus is None:
@@ -50,8 +48,8 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
             )))
             print()
 
-        encoded_files = shader(input_files=[input_file], width=width,
-                               height=height,
+        encoded_files = shader(debug=debug, input_files=[input_file],
+                               width=width, height=height,
                                shader_path=shader_path, ten_bit=ten_bit,
                                language="", softsubs=True,
                                softaudio=True, desired_fps=desired_fps,
@@ -72,7 +70,7 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
         print("Starting mode subs for input={0}".format(input_file))
         extracted_subs = False
         try:
-            extracted_subs = extract_subs(input_file, "")
+            extracted_subs = extract_subs(debug, input_file, "")
         except Exception as ex:
             print(ex)
             extracted_subs = False
@@ -93,7 +91,7 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
         print("Starting mode audio for input={0}".format(input_file))
         extracted_audio = False
         try:
-            extracted_audio = extract_audio(input_file, "", skip_menus)
+            extracted_audio = extract_audio(debug, input_file, "", skip_menus)
         except Exception as ex:
             print(ex)
             extracted_audio = False
@@ -116,7 +114,7 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
         print("Starting mode mux for input={0}, output={1}".format(output_path,
                                                                    new_output))
         try:
-            mux(output_path, new_output)
+            mux(debug, output_path, new_output)
         except Exception as e:
             print("Failed to mux file={0}".format(output_path))
             print(e)
@@ -136,7 +134,8 @@ def multi(input_files: "list[str]", width: int, height: int, shader_path: str,
         print("Successfully compiled file={0}".format(new_output))
         successful_inputs[input_file] = new_output
 
-    clear()
+    if not debug:
+        clear()
 
     if len(successful_inputs) > 0:
         print(

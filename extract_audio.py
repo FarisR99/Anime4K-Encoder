@@ -37,7 +37,8 @@ def show_convert_audio_menu(skip_menus: dict) -> int:
     return convert_choice
 
 
-def extract_audio(fn: str, out_dir: str, skip_menus: dict) -> bool:
+def extract_audio(debug: bool, fn: str, out_dir: str,
+                  skip_menus: dict) -> bool:
     """
     Extract audio from a media file.
 

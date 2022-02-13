@@ -39,6 +39,9 @@ parser = argparse.ArgumentParser(
 parser.add_argument("-v", "--version", required=False,
                     action='store_true',
                     help="Print the current version of Anime4K-Encoder")
+parser.add_argument("--debug", required=False,
+                    action='store_true',
+                    help='Enable debug mode; print more information and no screen clearing')
 parser.add_argument("-m", "--mode", required=False,
                     default="shader",
                     help='''Modes:
@@ -103,6 +106,10 @@ args = vars(parser.parse_args())
 if args['version']:
     print("Anime4K-Encoder v" + __current_version__)
     sys.exit(1)
+
+debug = args['debug']
+if debug is None:
+    debug = False
 
 
 def exit_if_missing(file_path: str, allow_dir: bool = True):
@@ -215,27 +222,28 @@ if skip_menus is None:
 
 # Perform action based on mode
 if mode == "audio":
-    extract_audio(fn, output, skip_menus)
+    extract_audio(debug, fn, output, skip_menus)
 elif mode == "subs":
-    extract_subs(fn, output)
+    extract_subs(debug, fn, output)
 elif mode == "mux":
-    mux(fn, output)
+    mux(debug, fn, output)
 elif mode == "shader":
-    shader(in_files, args['width'], args['height'],
+    shader(debug, in_files, args['width'], args['height'],
            args['shader_dir'], args['bit'], args['audio_language'],
            args['softsubs'], args['softaudio'], args['fps'], skip_menus, True,
            output)
 elif mode == "multi":
-    multi(in_files, args['width'], args['height'],
+    multi(debug, in_files, args['width'], args['height'],
           args['shader_dir'], args['bit'], args['fps'], skip_menus,
           args['delete_failures'], output)
 elif mode == "encode":
-    encode_to_hevc(in_files, output, skip_menus)
+    encode_to_hevc(debug, in_files, output, skip_menus)
 elif mode == "split":
     length = get_video_length(fn)
-    split_by_seconds(filename=fn, split_length=args['split_length'],
+    split_by_seconds(debug=debug, filename=fn,
+                     split_length=args['split_length'],
                      video_length=length, split_dir=output)
 elif mode == "patch":
-    patch(in_files, skip_menus, output)
+    patch(debug, in_files, skip_menus, output)
 else:
     print("Unknown mode: {0}".format(mode))

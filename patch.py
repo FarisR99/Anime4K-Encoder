@@ -7,7 +7,8 @@ from mux import clean_up, mux
 from utils import clear
 
 
-def patch(input_files: "list[str]", skip_menus: dict, outname: str):
+def patch(debug: bool, input_files: "list[str]", skip_menus: dict,
+          outname: str):
     """
     Run extract audio and extract subs on the original input files,
     and finally mux the encoded file that already exists in the output
@@ -17,8 +18,6 @@ def patch(input_files: "list[str]", skip_menus: dict, outname: str):
         input_files: list of input media files
         skip_menus: menu skipping options passed from command line
         outname: output directory
-    Returns:
-
     """
 
     if not os.path.exists(outname):
@@ -31,7 +30,8 @@ def patch(input_files: "list[str]", skip_menus: dict, outname: str):
     successful_inputs = {}
     failed_inputs = []
 
-    clear()
+    if not debug:
+        clear()
     show_convert_audio_menu(skip_menus)
 
     for input_file in input_files:
@@ -42,7 +42,10 @@ def patch(input_files: "list[str]", skip_menus: dict, outname: str):
                 "error: could not locate encoded file, skipping input file={0}".format(
                     input_file))
 
-        clear()
+        if not debug:
+            clear()
+        else:
+            print()
         if len(successful_inputs) > 0:
             print("Completed input files:\n {0}".format("\n ".join(
                 [os.path.basename(successful_input) for successful_input in
@@ -54,7 +57,7 @@ def patch(input_files: "list[str]", skip_menus: dict, outname: str):
         print("Starting mode subs")
         extracted_subs = False
         try:
-            extracted_subs = extract_subs(input_file, "")
+            extracted_subs = extract_subs(debug, input_file, "")
         except Exception as ex:
             print(ex)
             extracted_subs = False
@@ -71,7 +74,7 @@ def patch(input_files: "list[str]", skip_menus: dict, outname: str):
         print("Starting mode audio".format(input_file))
         extracted_audio = False
         try:
-            extracted_audio = extract_audio(input_file, "", skip_menus)
+            extracted_audio = extract_audio(debug, input_file, "", skip_menus)
         except Exception as ex:
             print(ex)
             extracted_audio = False
@@ -90,7 +93,7 @@ def patch(input_files: "list[str]", skip_menus: dict, outname: str):
             encoded_input_file,
             new_output))
         try:
-            mux(encoded_input_file, new_output)
+            mux(debug, encoded_input_file, new_output)
         except Exception as e:
             print("Failed to mux file={0}".format(encoded_input_file))
             print(e)
@@ -107,7 +110,10 @@ def patch(input_files: "list[str]", skip_menus: dict, outname: str):
         print("Successfully compiled file={0}".format(new_output))
         successful_inputs[input_file] = new_output
 
-    clear()
+    if not debug:
+        clear()
+    else:
+        print()
     if len(successful_inputs) > 0:
         print(
             "All of the following input files have been compiled:")
