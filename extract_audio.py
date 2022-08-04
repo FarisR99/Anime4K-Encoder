@@ -66,9 +66,10 @@ def extract_audio(debug: bool, fn: str, out_dir: str,
         if track.track_type == 'audio':
             ext = track._track_codec
             if track._language not in language_mapping:
-                print("Skipping unknown track language: " + track._language)
-                continue
-            lang = lang_short_to_long(track._language)
+                print("WARNING: Unknown track language: {0}".format(track._language))
+                lang = "Japanese"
+            else:
+                lang = lang_short_to_long(track._language)
             id = str(track._track_id)
             return_code = -1
             try:
@@ -84,6 +85,8 @@ def extract_audio(debug: bool, fn: str, out_dir: str,
                     sys.exit(-1)
                 except SystemExit:
                     os._exit(-1)
+            if debug:
+                print("mkvextract exited with return code={}", return_code)
             if return_code != 0:
                 success = False
 
