@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from shutil import which
 
-__current_version__ = '1.1.2'
+__current_version__ = '1.2.0'
 
 
 def credz():
@@ -39,29 +39,15 @@ def current_date() -> str:
 
 
 def lang_long_to_short(lang: str) -> str:
-    if lang == 'English':
-        return "eng"
-    elif lang == 'Japanese':
-        return "jpn"
-    elif lang == 'German':
-        return "ger"
-    elif lang == 'Korean':
-        return "kor"
+    if lang in reversed_lang_mapping:
+        return reversed_lang_mapping[lang]
     else:
         return "und"
 
 
 def lang_short_to_long(lang: str) -> str:
-    if lang == "eng":
-        return "English"
-    elif lang == "jpn" or lang == "jap" or lang == "ja":
-        return "Japanese"
-    elif lang == "fra":
-        return "French"
-    elif lang == "ger":
-        return "German"
-    elif lang == "kor":
-        return "Korean"
+    if lang in language_mapping:
+        return language_mapping[lang]
     else:
         return "Unknown"
 
@@ -74,6 +60,25 @@ language_mapping = {
     "jpn": "Japanese",
     "ger": "German",
     "kor": "Korean",
+    "por": "Portuguese",
+    "spa": "Spanish",
+    "ita": "Italian",
+    "pol": "Polish",
+    "hin": "Hindi",
+    "chi": "Chinese"
+}
+
+reversed_lang_mapping = {
+    "English": "eng",
+    "Japanese": "jpn",
+    "German": "ger",
+    "Korean": "kor",
+    "Portuguese": "por",
+    "Spanish": "spa",
+    "Italian": "ita",
+    "Polish": "pol",
+    "Hindi": "hin",
+    "Chinese": "chi"
 }
 
 

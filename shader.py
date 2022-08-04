@@ -1,3 +1,4 @@
+import math
 import os
 import subprocess
 import sys
@@ -10,7 +11,7 @@ from utils import current_date, clear
 
 # Menus
 
-def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
+def menu_fhd_shaders(debug: bool, shader_path: str, skip_menus: dict) -> str:
     """
     Select a shader for FHD or higher resolution videos.
 
@@ -39,13 +40,16 @@ def menu_fhd_shaders(shader_path: str, skip_menus: dict) -> str:
                 "Mode B+B (RECOMMENDED. High Quality, Minor Artifacts)",
                 "Mode C+A (Low Quality, Minor Artifacts)"
             ],
-            title="Please refer to the Anime4k Wiki for more info and try the\n shaders on mpv beforehand to know what's best for you.\nChoose Shader Preset:"
+            title="Please refer to the Anime4k Wiki for more info and try the\n shaders on mpv beforehand to know what's best for you.\nChoose Shader Preset:",
+            clear_screen=(debug is False),
+            clear_menu_on_exit=(debug is False)
         )
         mode_choice = mode_menu.show()
 
         if mode_choice is None:
             print("Canceling")
             sys.exit(-1)
+    skip_menus['shader'] = str(mode_choice)
 
     if mode_choice == 0:
         s = os.path.join(shader_path, Clamp_Highlights)
@@ -205,9 +209,47 @@ def handle_encoding_cancellation(file_name: str, output_file, start_time: str,
             os._exit(-1)
 
 
-def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
+def getLevel(encoder: str, width: int, height: int, desired_fps: float):
+    if desired_fps is None:
+        desired_fps = 0.0
+    if "h264" in encoder or "x264" in encoder:
+        if (width * height) <= (1920 * 1080):
+            if desired_fps > 60:
+                return 5.1
+            elif desired_fps > 30:
+                return 4.2
+            else:
+                return 4.1
+        else:
+            if desired_fps > 60:
+                return 6.0
+            elif desired_fps > 30:
+                return 5.2
+            else:
+                return 5.1
+    elif "hevc" in encoder or "h265" in encoder or "x265" in encoder:
+        if (width * height) <= (1920 * 1080):
+            if desired_fps > 60:
+                return 5.0
+            elif desired_fps > 30:
+                return 4.1
+            else:
+                return 4.0
+        else:
+            if desired_fps > 60:
+                return 5.2
+            elif desired_fps > 30:
+                return 5.1
+            else:
+                return 5.0
+    return 5.1
+
+
+def shader(debug: bool, input_files: "list[str]", width: int, height: int,
+           shader_path: str,
            ten_bit: bool, language: str, softsubs: bool, softaudio: bool,
-           skip_menus: dict, exit_on_cancel: bool, outname: str) -> dict:
+           desired_fps: float, skip_menus: dict, exit_on_cancel: bool,
+           outname: str) -> dict:
     """
     Select encoding and start the encoding process.
 
@@ -220,6 +262,7 @@ def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
         language: optional desired audio track language
         softsubs: true if subtitles should be removed
         softaudio: true if audio should be removed
+        desired_fps: output framerate
         skip_menus: menu skipping options passed from command line
         exit_on_cancel: true if the program should exit when the user cancels
             during encoding, false if the function call should terminate
@@ -237,7 +280,8 @@ def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
     output_is_dir = os.path.isdir(outname)
     if len(input_files) == 1:
         if output_is_dir:
-            new_outname = os.path.join(outname, "out.mkv")
+            new_outname = os.path.join(outname,
+                                       os.path.basename(input_files[0]))
             out_name_index = 1
             while os.path.exists(new_outname):
                 new_outname = os.path.join(outname, "out-{0}.mkv"
@@ -245,129 +289,127 @@ def shader(input_files: "list[str]", width: int, height: int, shader_path: str,
                 out_name_index = out_name_index + 1
             outname = new_outname
             output_is_dir = False
+        if not debug:
+            clear()
         remove_audio_and_subs(input_files[0], softsubs, softaudio)
-        clear()
+        if not debug:
+            clear()
+        else:
+            print()
 
     # Select encoder
-    codec = ""
     encoder = ""
 
     if "encoder" in skip_menus:
         encoder = skip_menus['encoder']
-        if encoder != 'cpu' and encoder != 'nvenc' and encoder != 'amf':
-            print("Unsupported encoder: {0}".format(encoder))
-            sys.exit(-2)
     if encoder == "":
         if "recommended" in skip_menus and skip_menus["recommended"] == "1":
-            encoder = "cpu"
-    if "codec" in skip_menus:
-        codec = skip_menus['codec']
-        if codec == 'x264':
-            codec = 'h264'
-            encoder = 'cpu'
-        elif codec == 'x265':
-            codec = 'hevc'
-            encoder = 'cpu'
-        elif codec == 'h265':
-            codec = 'hevc'
-        if codec != 'h264' and codec != 'hevc':
-            print("Unsupported codec={0}".format(encoder))
-            sys.exit(-2)
-    if codec == "":
-        if "recommended" in skip_menus and skip_menus["recommended"] == "1":
-            codec = "h264"
-    if codec == "" or encoder == "":
+            encoder = "x264"
+    if encoder == "":
         cg_menu = TerminalMenu(
             [
-                "CPU X264 (Medium Quality/Size ratio, Fast)",
-                "CPU X265 (High Quality/Size ratio, Slow)",
-                "NVIDIA GPU H264 (NVENC)",
-                "NVIDIA GPU HEVC (NVENC)",
-                "AMD GPU H264 (AMF)",
-                "AMD GPU HEVC (AMF)"
+                "CPU - X264 (Medium Quality/Size ratio, Fast)",
+                "CPU - X265 (High Quality/Size ratio, Slow)",
+                "CPU - AV1 (Very High Quality/Size ratio)",
+                "NVIDIA GPU - NVENC H264",
+                "NVIDIA GPU - NVENC HEVC",
+                "AMD GPU - VAAPI H264",
+                "AMD GPU - VAAPI HEVC",
+                "Intel QuickSync - X264 (Low Quality, Fast)",
+                "Intel QuickSync - HEVC (Low Quality, Slow)"
             ],
-            title="Choose Video Codec:"
+            title="Choose Encoder:",
+            clear_screen=(debug is False),
+            clear_menu_on_exit=(debug is False)
         )
         cg_choice = cg_menu.show()
         if cg_choice == 0:
-            codec = "h264"
-            encoder = "cpu"
+            encoder = "x264"
         elif cg_choice == 1:
-            codec = "hevc"
-            encoder = "cpu"
+            encoder = "x265"
         elif cg_choice == 2:
-            codec = "h264"
-            encoder = "nvenc"
+            encoder = "cpu_av1"
         elif cg_choice == 3:
-            codec = "hevc"
-            encoder = "nvenc"
+            encoder = "nvenc_h264"
         elif cg_choice == 4:
-            codec = "h264"
-            encoder = "amf"
+            encoder = "nvenc_hevc"
         elif cg_choice == 5:
-            codec = "hevc"
-            encoder = "amf"
+            encoder = "vaapi_h264"
+        elif cg_choice == 6:
+            encoder = "vaapi_hevc"
+        elif cg_choice == 7:
+            encoder = "h264_qsv"
+        elif cg_choice == 8:
+            encoder = "hevc_qsv"
         else:
             print("Cancelled")
             shader_cleanup()
             sys.exit(-2)
+    skip_menus['encoder'] = encoder
 
-    return start_encoding(codec, encoder, width, height, shader_path, ten_bit,
-                          language, softsubs, softaudio, skip_menus,
-                          exit_on_cancel, input_files, outname)
+    return start_encoding(debug, encoder, width, height, shader_path,
+                          ten_bit, language, softsubs, softaudio, desired_fps,
+                          skip_menus, exit_on_cancel, input_files, outname)
 
 
-def start_encoding(codec: str, encoder: str, width: int, height: int,
-                   shader_path: str, ten_bit: bool, language: str,
-                   softsubs: bool, softaudio: bool, skip_menus: dict,
-                   exit_on_cancel: bool, files: "list[str]",
+def start_encoding(debug: bool, encoder: str, width: int,
+                   height: int, shader_path: str, ten_bit: bool, language: str,
+                   softsubs: bool, softaudio: bool, desired_fps: float,
+                   skip_menus: dict, exit_on_cancel: bool, files: "list[str]",
                    outname: str) -> dict:
     """
     Start the encoding of input file(s) to the specified encoding using the CPU.
     """
 
-    clear()
+    if not debug:
+        clear()
 
     if ten_bit:
-        format = "yuv420p10le"
+        vid_format = "yuv420p10le"
     else:
-        format = "yuv420p"
-    # AMD GPU Encoding only supports "vaapi_vld"
-    # I can't seem to find what this actually is.
-    if encoder == "amf":
-        format = "vaapi_vld"
+        vid_format = "yuv420p"
 
     # Open shaders menu
-    str_shaders = menu_fhd_shaders(shader_path, skip_menus)
-    clear()
+    str_shaders = menu_fhd_shaders(debug, shader_path, skip_menus)
+    if not debug:
+        clear()
+    else:
+        print()
 
-    # Select Codec Presets
-    if encoder == "cpu" or encoder == "nvenc":
-        codec_presets = []
-        if encoder == "cpu":
-            codec_presets = [
+    # Select Encoder Presets
+    encoder_presets = []
+    encoder_preset = None
+    if not encoder.startswith("vaapi_"):
+        if encoder == "x264" or encoder == "x265" or encoder.endswith("_qsv"):
+            encoder_presets = [
                 "ultrafast", "veryfast", "fast", "medium", "slow", "veryslow"
             ]
-        elif encoder == "nvenc":
-            codec_presets = ["fast", "medium", "slow", "lossless"]
-        codec_preset = None
+        elif encoder.startswith("nvenc_"):
+            encoder_presets = ["fast", "medium", "slow", "lossless"]
+        else:
+            encoder_presets = ["fast", "medium", "slow"]
         if "preset" in skip_menus:
-            codec_preset = skip_menus['preset']
-            if codec_preset not in codec_presets:
-                codec_preset = None
+            encoder_preset = skip_menus['preset']
+            if encoder_preset not in encoder_presets:
+                encoder_preset = None
         elif "recommended" in skip_menus and skip_menus["recommended"] == "1":
-            codec_preset = "fast"
-        if codec_preset is None:
-            selected_codec_preset = TerminalMenu(codec_presets,
-                                                 title="Choose Encoder Preset:").show()
-            if selected_codec_preset is None:
+            encoder_preset = "fast"
+        if encoder_preset is None:
+            selected_encoder_preset = TerminalMenu(
+                encoder_presets,
+                title="Choose Encoder Preset:",
+                clear_screen=(debug is False),
+                clear_menu_on_exit=(debug is False)
+            ).show()
+            if selected_encoder_preset is None:
                 print("Cancelled")
                 shader_cleanup()
                 sys.exit(-1)
-            codec_preset = codec_presets[selected_codec_preset]
+            encoder_preset = encoder_presets[selected_encoder_preset]
+        skip_menus['preset'] = encoder_preset
 
     comp_level = ""
-    if encoder == "cpu":
+    if encoder == "x264" or encoder == "x265" or encoder.endswith("_qsv"):
         if "crf" in skip_menus:
             crf = int(skip_menus['crf'])
             if 0 <= crf <= 51:
@@ -384,7 +426,8 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             )
             if comp_level == "" or comp_level is None:
                 comp_level = "23"
-    elif encoder == "nvenc" or encoder == "amf":
+        skip_menus['crf'] = comp_level
+    else:
         if "qp" in skip_menus:
             qp = int(skip_menus['qp'])
             if 0 <= qp <= 51:
@@ -401,91 +444,128 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             )
             if comp_level == "" or comp_level is None:
                 comp_level = "24"
+        skip_menus['qp'] = comp_level
 
     # Print Info
     files_string = ", ".join(files)
     print("Files: {0}".format(files_string))
     print("Using the following shaders:")
     print(str_shaders)
-    if encoder == "cpu":
-        print("Encoding with preset: {0} crf={1}".format(codec_preset,
-                                                         comp_level))
-    elif encoder == "nvenc":
-        print("Encoding with preset: {0} qp={1}".format(codec_preset,
-                                                        comp_level))
-    elif encoder == "amf":
+    if not encoder.startswith("vaapi_"):
+        print("Encoding with preset: {0} compression={1}".format(encoder_preset,
+                                                                 comp_level))
+    else:
         print("Encoding with preset: qp={0}".format(comp_level))
     start_time = current_date()
     print("Start time: " + start_time)
     import time
     time.sleep(3)
-    clear()
+    if not debug:
+        clear()
+    else:
+        print()
 
     # Encode
     encoding_args = [
         "mpv",
-        "--vf=format=" + format,
+        "--no-config",
         "--profile=gpu-hq",
+        "--vf-add=format=" + vid_format,
+        '--vf-add=gpu=w=' + str(width) + ':h=' + str(height),
+        '--vf-pre=sub',
         "--scale=ewa_lanczossharp",
         "--cscale=ewa_lanczossharp",
         "--video-sync=display-resample",
         "--interpolation",
         "--tscale=oversample",
-        '--vf-pre=sub',
-        '--vf=gpu=w=' + str(width) + ':h=' + str(height),
         "--glsl-shaders=" + str_shaders,
         "--oac=libopus",
         "--oacopts=b=192k",
     ]
     if language is not None and language != "":
         encoding_args.append("--alang=" + str(language))
+    if encoder.endswith("_qsv") and desired_fps is None:
+        print("ERROR: Intel QuickSync requires an FPS to be set.")
+        sys.exit(-1)
+    if desired_fps is not None and desired_fps > 0:
+        encoding_args.append("--vf-add=fps=" + str(desired_fps))
+        if encoder.endswith("_qsv"):
+            encoding_args.append("--ovcopts-add=time_base=1000/" + str(math.floor(desired_fps * 1000)))
 
     # Arguments specific to the encoding and encoder specified
-    if encoder == "cpu":
-        bf = 8
-        if len(files) == 1:
-            bf = 6
+    level = getLevel(encoder, width, height, desired_fps)
+    if encoder == "x264" or encoder == "x265":
+        bf = 6 if len(files) == 1 else 8
 
-        if codec == "h264":
+        if encoder == "x264":
             encoding_args.append("--ovc=libx264")
-        elif codec == "hevc":
+            encoding_args.append('--ovcopts=preset=' + encoder_preset + ',level=' + str(level) + ',crf=' + str(
+                comp_level) + ',aq-mode=3,psy-rd=1.0,bf=' + str(bf))
+        elif encoder == "x265":
             encoding_args.append("--ovc=libx265")
+            encoding_args.append(
+                '--ovcopts=preset=' + encoder_preset + ',level=' + str(level) + ',crf=' + str(
+                    comp_level) + ',bf=' + str(
+                    bf))
         else:
-            print("ERROR: Unknown codec: {0}".format(codec))
+            print("ERROR: Unknown encoder: {0}".format(encoder))
             shader_cleanup()
             sys.exit(-2)
-
-        encoding_args.append(
-            '--ovcopts=preset=' + codec_preset + ',level=5.1,crf=' + str(
-                comp_level) + ',aq-mode=3,psy-rd=1.0,bf=' + str(bf))
-    elif encoder == "nvenc":
-        encoding_args.append("--vo=gpu")
-
-        if codec == "h264":
+    elif encoder.startswith("nvenc_"):
+        encoding_args.append("--ovcopts-add=rc=constqp")
+        encoding_args.append("--ovcopts-add=preset={0}".format(encoder_preset))
+        encoding_args.append("--ovcopts-add=qp={0}".format(comp_level))
+        encoding_args.append("--ovcopts-add=rc-lookahead={0}".format(32))
+        if encoder == "nvenc_h264":
             encoding_args.append("--ovc=h264_nvenc")
-            encoding_args.append(
-                '--ovcopts=rc=constqp,preset=' + codec_preset +
-                ',profile=high,level=5.1,rc-lookahead=32,qp=' + str(comp_level)
-            )
-        elif codec == "hevc":
+            encoding_args.append("--ovcopts-add=profile=high")
+            encoding_args.append("--ovcopts-add=level={0}".format(str(level)))
+        elif encoder == "nvenc_h265":
             encoding_args.append("--ovc=hevc_nvenc")
-            encoding_args.append(
-                '--ovcopts=rc=constqp,preset=' + codec_preset +
-                ',profile=main10,rc-lookahead=32,qp=' + str(comp_level)
-            )
-    elif encoder == "amf":
-        encoding_args.append("--vo=gpu")
-
+            encoding_args.append("--ovcopts-add=profile=main10")
+    elif encoder.startswith("vaapi_"):
         profile = ""
-        if codec == "h264":
+        if encoder == "h264":
             encoding_args.append("--ovc=h264_vaapi")
             profile = "high"
-        elif codec == "hevc":
+        elif encoder == "hevc":
             encoding_args.append("--ovc=hevc_vaapi")
             profile = "main10"
-        encoding_args.append(
-            '--ovcopts=rc_mode=cqp,profile=' + profile + ',level=5.1,qp='
-            + str(comp_level))
+        encoding_args.append("--ovcopts-add=rc_mode=CQP")
+        encoding_args.append("--ovcopts-add=profile={0}".format(profile))
+        encoding_args.append("--ovcopts-add=level={0}".format(str(level)))
+        encoding_args.append("--ovcopts-add=qp={0}".format(comp_level))
+    elif encoder.endswith("_qsv"):
+        profile = ""
+        if encoder == "h264_qsv":
+            encoding_args.append("--ovc=h264_qsv")
+            profile = "high"
+        elif encoder == "hevc_qsv":
+            encoding_args.append("--ovc=hevc_qsv")
+            profile = "main10"
+
+        if encoder_preset == "ultrafast":
+            encoder_preset = "veryfast"
+        elif encoder_preset == "veryfast":
+            encoder_preset = "faster"
+        elif encoder_preset == "veryslow":
+            encoder_preset = "slower"
+
+        bf = 6 if len(files) == 1 else 8
+
+        encoding_args.append("--ovcopts-add=preset={0}".format(encoder_preset))
+        encoding_args.append("--ovcopts-add=level={0}".format(str(level)))
+        encoding_args.append("--ovcopts-add=profile={0}".format(profile))
+        encoding_args.append("--ovcopts-add=bf={0}".format(bf))
+        encoding_args.append("--ovcopts-add=global_quality={0}".format(comp_level))
+    elif encoder == "cpu_av1":
+        encoding_args.append("--ovc=libsvtav1")
+        # TODO: Really bad way of doing preset. Needs improvement.
+        preset = max(0, min(8, 1 + (len(encoder_presets) - encoder_presets.index(encoder_preset))))
+        encoding_args.append("--ovcopts-add=rc=cqp")
+        encoding_args.append("--ovcopts-add=la_depth={0}".format(32))
+        encoding_args.append("--ovcopts-add=preset={0}".format(preset))
+        encoding_args.append("--ovcopts-add=qp={0}".format(comp_level))
 
     successful_encodes = {}
     if len(files) == 1:
@@ -517,16 +597,23 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             name = f.split("/")
             name = name[len(name) - 1]
             remove_audio_and_subs(f, softsubs, softaudio)
-            clear()
-            print("Encoded files: {0}".format(
-                ", ".join(successful_encodes.keys())))
-            print("Remaining files: {0}".format(", ".join(
+            if not debug:
+                clear()
+            else:
+                print()
+            print("Encoded files:\n {0}".format("\n ".join(
+                [os.path.basename(successful_encode) for successful_encode in
+                 successful_encodes.keys()]
+            )))
+            print()
+            print("Remaining files:\n {0}".format("\n ".join(
                 [
-                    item for item in files
+                    os.path.basename(item) for item in files
                     if
                     item not in failed_files and item not in successful_encodes
                 ]
             )))
+            print()
             print("Start time: {0}".format(start_time))
             print("Start time for file={0}: {1}".format(str(i + 1),
                                                         current_date()))
@@ -551,8 +638,10 @@ def start_encoding(codec: str, encoder: str, width: int, height: int,
             print("End time for file={0}: {1}".format(str(i + 1),
                                                       current_date()))
             os.remove("temp.mkv")
-            clear()
+            if not debug:
+                clear()
             i = i + 1
+        print()
         print("Files: {0}".format(files_string))
         print("Start time: {0}".format(start_time))
         print("End time: {0}".format(current_date()))

@@ -5,7 +5,6 @@ from pymkv import MKVFile
 
 from utils import current_date
 
-
 def genExt(codec):
     if "PGS" in codec:
         return "sup"
@@ -19,7 +18,7 @@ def genExt(codec):
         return None
 
 
-def extract_subs(fn: str, out_dir: str) -> bool:
+def extract_subs(debug: bool, fn: str, out_dir: str) -> bool:
     """
     Extract subtitles from a media file.
 
@@ -61,6 +60,8 @@ def extract_subs(fn: str, out_dir: str) -> bool:
                 print("Cancelled subtitles extraction.")
                 print("Exiting program...")
                 sys.exit(-1)
+            if debug:
+                print("mkvextract exited with return code={}", return_code)
             if return_code != 0:
                 success = False
     print("Subtitle extraction end time: " + current_date())

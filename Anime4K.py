@@ -8,12 +8,14 @@ from extract_audio import extract_audio
 from extract_subs import extract_subs
 from multi import multi
 from mux import mux
+from patch import patch
 from shader import shader
 from splitter import split_by_seconds, get_video_length
 from utils import __current_version__, is_tool, credz, str2dict
 
 # Constant variables
-MODES_SUPPORTING_MULTI_INPUTS = ["shader", "multi", "encode"]
+MODES_SUPPORTING_MULTI_INPUTS = ["shader", "multi", "encode", "patch"]
+MODES_TO_IGNORE_OUTPUT_EXISTENCE = ["patch"]
 
 # Print credits
 credz()
@@ -37,6 +39,9 @@ parser = argparse.ArgumentParser(
 parser.add_argument("-v", "--version", required=False,
                     action='store_true',
                     help="Print the current version of Anime4K-Encoder")
+parser.add_argument("--debug", "--verbose", required=False,
+                    action='store_true',
+                    help='Enable debug mode; print more information and no screen clearing')
 parser.add_argument("-m", "--mode", required=False,
                     default="shader",
                     help='''Modes:
@@ -46,7 +51,10 @@ parser.add_argument("-m", "--mode", required=False,
  mux - Mux/compile a media file with audio files and subtitle files
  multi - Apply shader with -ss and -sa, audio, subs and mux mode in order
  encode - Encode media files using X265 with predefined settings
- split - Split a media file into parts''')
+ split - Split a media file into parts
+ patch - Extract audio and subs from input files then mux with already upscaled 
+         output files located in the output directory with matching file names.
+         This is essentially a mux mode supporting multiple files.''')
 parser.add_argument("-ew", "--width", required=False, type=int, default=3840,
                     help="Desired width when applying shader")
 parser.add_argument("-eh", "--height", required=False, type=int, default=2160,
@@ -71,6 +79,8 @@ parser.add_argument("-sa", "--softaudio", required=False,
                     action='store_true',
                     default=False,
                     help="Set this flag if you want to manually mux audio when using mode shader")
+parser.add_argument("-fps", "--fps", required=False, type=float,
+                    help="Desired framerate when applying shader")
 parser.add_argument("-sm", "--skip_menus", required=False, type=str2dict,
                     help='''Skip choice menus
 Examples for mode shader:
@@ -90,12 +100,16 @@ parser.add_argument("--delete_failures", required=False,
                     default=False,
                     help="Set this flag to delete output files that have failed to compile when using mode multi")
 parser.add_argument("-si", "--skip_input", required=False, action='append',
-                    help="Input file to skip when using a directory as an input for modes shader and multi")
+                    help="Input file to skip when using a directory as an input for modes shader, multi and patch")
 
 args = vars(parser.parse_args())
 if args['version']:
     print("Anime4K-Encoder v" + __current_version__)
     sys.exit(1)
+
+debug = args['debug']
+if debug is None:
+    debug = False
 
 
 def exit_if_missing(file_path: str, allow_dir: bool = True):
@@ -151,7 +165,9 @@ if mode == "audio" or mode == "subs":
                 output = output + "/"
 elif mode in MODES_SUPPORTING_MULTI_INPUTS:
     output = args['output'] or "out.mkv"
-    if os.path.isdir(output) and not os.path.exists(output):
+    if mode not in MODES_TO_IGNORE_OUTPUT_EXISTENCE \
+            and os.path.isdir(output) \
+            and not os.path.exists(output):
         try:
             os.mkdir(output)
         except Exception as e:
@@ -179,14 +195,14 @@ if mode in MODES_SUPPORTING_MULTI_INPUTS:
                 os.path.join(file, "*.mp4")
             ):
                 file_name = os.path.basename(file_in_dir)
-                if file_name in skip_inputs:
+                if file_in_dir in skip_inputs or file_name in skip_inputs:
                     continue
                 in_files.append(os.path.join(file_in_dir))
         else:
             # Only here for consistency
             # Why would you specify a file input then add that file
             # to a list of files to ignore?
-            if file in skip_inputs:
+            if file in skip_inputs or os.path.basename(file) in skip_inputs:
                 continue
             in_files.append(os.path.join(file))
     file_count = len(in_files)
@@ -206,24 +222,28 @@ if skip_menus is None:
 
 # Perform action based on mode
 if mode == "audio":
-    extract_audio(fn, output, skip_menus)
+    extract_audio(debug, fn, output, skip_menus)
 elif mode == "subs":
-    extract_subs(fn, output)
+    extract_subs(debug, fn, output)
 elif mode == "mux":
-    mux(fn, output)
+    mux(debug, fn, output)
 elif mode == "shader":
-    shader(in_files, args['width'], args['height'],
+    shader(debug, in_files, args['width'], args['height'],
            args['shader_dir'], args['bit'], args['audio_language'],
-           args['softsubs'], args['softaudio'], skip_menus, True, output)
+           args['softsubs'], args['softaudio'], args['fps'], skip_menus, True,
+           output)
 elif mode == "multi":
-    multi(in_files, args['width'], args['height'],
-          args['shader_dir'], args['bit'], skip_menus,
+    multi(debug, in_files, args['width'], args['height'],
+          args['shader_dir'], args['bit'], args['fps'], skip_menus,
           args['delete_failures'], output)
 elif mode == "encode":
-    encode_to_hevc(in_files, output, skip_menus)
+    encode_to_hevc(debug, in_files, output, skip_menus)
 elif mode == "split":
     length = get_video_length(fn)
-    split_by_seconds(filename=fn, split_length=args['split_length'],
+    split_by_seconds(debug=debug, filename=fn,
+                     split_length=args['split_length'],
                      video_length=length, split_dir=output)
+elif mode == "patch":
+    patch(debug, in_files, skip_menus, output)
 else:
     print("Unknown mode: {0}".format(mode))
