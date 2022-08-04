@@ -11,6 +11,8 @@ audio_file_extensions = [
     "AC-3", "E-AC-3", "DTS-HD Master Audio"
 ]
 
+subtitle_file_extensions = ["sup", "srt", "ass", "idx"]
+
 
 def addAudio(source, ext: str):
     """
@@ -26,7 +28,7 @@ def addAudio(source, ext: str):
         lang = file.split('.')[0]
         t.track_name = lang
         t.language = lang_long_to_short(lang)
-        print("Adding audio track: " + t.track_name)
+        print("Adding audio track={0}".format(t.track_name))
         source.add_track(t)
 
 
@@ -47,8 +49,12 @@ def addSubs(source, ext: str):
         else:
             lang = lang
         t.track_name = lang_short_to_long(lang)
-        t.language = lang
-        print("Adding new subs: " + t.track_name)
+        try:
+            t.language = lang
+        except Exception as e:
+            print("Failed to set track language to={0}".format(lang))
+            raise e
+        print("Adding new subs={0}".format(t.track_name))
         source.add_track(t)
 
 
@@ -59,7 +65,6 @@ def delete_by_extension(ext: str):
     Args:
         ext: File extension
     """
-
     for file in glob.glob("*." + ext):
         os.remove(file)
 
@@ -67,12 +72,8 @@ def delete_by_extension(ext: str):
 def clean_up():
     for audio_file_ext in audio_file_extensions:
         delete_by_extension(audio_file_ext)
-
-    delete_by_extension("sup")
-    delete_by_extension("srt")
-    delete_by_extension("ass")
-    delete_by_extension("idx")
-    delete_by_extension("sub")
+    for subtitle_file_ext in subtitle_file_extensions:
+        delete_by_extension(subtitle_file_ext)
 
 
 def mux(debug: bool, fn: str, out: str):
@@ -88,11 +89,8 @@ def mux(debug: bool, fn: str, out: str):
 
     for audio_file_ext in audio_file_extensions:
         addAudio(mkv, audio_file_ext)
-
-    addSubs(mkv, "sup")
-    addSubs(mkv, "srt")
-    addSubs(mkv, "ass")
-    addSubs(mkv, "idx")
+    for subtitle_file_ext in subtitle_file_extensions:
+        addSubs(mkv, subtitle_file_ext)
 
     print("Mux start time: " + current_date())
     try:
